@@ -2293,8 +2293,47 @@ assignees: ''
 <!-- Mockups, exemplos de outros produtos, referências -->`;
 }
 
-const GIT_FILES=['PR Template','.github/ISSUE_TEMPLATE/bug_report.md','.github/ISSUE_TEMPLATE/feature_request.md'];
-const GIT_GENS=[gPRTemplate,gBugReport,gFeatureRequest];
+function gChangelog(){
+  if(!S.meta.useGit) return '';
+  const name=S.meta.name||'NEEDS CLARIFICATION';
+  const phases=S.plan.phases;
+  const phaseSections=phases.length
+    ? phases.map((ph,i)=>{
+        const version=`0.${i+1}.0`;
+        const label=ph.name||`Fase ${i+1}`;
+        const goal=ph.goal||'NEEDS CLARIFICATION';
+        const deadline=ph.deadline?` — ${ph.deadline}`:'';
+        const deliverables=ph.deliverables
+          ? ph.deliverables.split('\n').filter(Boolean).map(d=>`- ${d.trim()}`).join('\n')
+          : '- NEEDS CLARIFICATION';
+        return `## [${version}]${deadline}\n### ${label}\n> ${goal}\n\n### Added\n${deliverables}`;
+      }).join('\n\n---\n\n')
+    : '## [0.1.0]\n### Added\n- NEEDS CLARIFICATION';
+  return `# Changelog — ${name}
+
+Todas as mudanças notáveis são documentadas aqui.
+Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
+Versionamento: [Semantic Versioning](https://semver.org/lang/pt-BR/)
+
+> **Instrução para o Git Master:** a cada PR mergeado, mover os itens concluídos
+> de \`[Unreleased]\` para a versão correspondente com a data real de entrega.
+
+***
+
+## [Unreleased]
+
+### Added
+### Changed
+### Fixed
+### Security
+
+***
+
+${phaseSections}
+`;}
+
+const GIT_FILES=['PR Template','.github/ISSUE_TEMPLATE/bug_report.md','.github/ISSUE_TEMPLATE/feature_request.md','CHANGELOG.md'];
+const GIT_GENS=[gPRTemplate,gBugReport,gFeatureRequest,gChangelog];
 
 function getActiveFiles(){
   return S.meta.useGit===true ? [...FILES,...GIT_FILES] : [...FILES];

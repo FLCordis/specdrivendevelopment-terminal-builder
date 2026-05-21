@@ -1,113 +1,103 @@
 Leia o CLAUDE.md antes de qualquer coisa.
 
-Implemente duas melhorias no index.html. Ambas são 100% aditivas — nenhum comportamento existente deve ser alterado.
+Implemente a geração do arquivo CHANGELOG.md no SDD Terminal (index.html).
+Implementação 100% aditiva — nada existente é alterado.
 
 ---
 
-## MELHORIA 1 — Botão "Limpar Tudo"
+## O que fazer
 
-### Onde adicionar
-No `sb-footer` (sidebar footer), como ÚLTIMO item da lista de botões, após "Carregar JSON".
+### 1. Criar a função gChangelog()
 
-### Comportamento
-1. Ao clicar: exibir `confirm('Tem certeza? Todo o progresso será perdido e não pode ser desfeito.')`
-2. Se confirmado:
-   - Resetar `S` para o estado inicial (igual ao que está definido no `let S = { ... }` original)
-   - Chamar `setUseGit(null)` para limpar o estado reativo do Git Master
-   - Chamar `render()` e `schedPV()`
-   - Limpar a hash da URL: `history.replaceState(null, '', window.location.pathname)`
-   - Exibir toast: "Projeto resetado"
-3. Se cancelado: não fazer nada
+Adicionar junto das outras funções geradoras (gClaude, gSpec, gPlan, etc.):
 
-### Estilo
-- Usar exatamente a classe `.sb-btn` existente — NÃO usar `.btn-p` nem `.btn-a`
-- Adicionar `style="border-color: var(--r); color: var(--r);"` inline para cor vermelha discreta
-- Ícone: `⊘` (ou `✕`)
-- Texto strong: "Limpar Tudo"
-- Texto small: "Reseta todo o progresso"
-- Deve ser visivelmente menor em destaque que o botão "Gerar Arquivos" — é ação destrutiva
-
----
-
-## MELHORIA 2 — Toggle de Colapso do Painel Preview (desktop)
-
-### Comportamento geral
-- O painel `aside#pv` tem atualmente largura fixa de 420px definida no grid do `#app`
-- Adicionar um botão toggle no `.pv-header` (canto esquerdo) que colapsa/expande o painel
-- Estado padrão: **expandido** (comportamento atual preservado)
-- Estado colapsado: painel encolhe para 32px de largura, mostrando apenas uma barra vertical clicável com texto rotacionado "ARQUIVOS GERADOS"
-- A transição deve ser suave: `transition: width 0.25s ease` no `#app` grid ou diretamente no `aside#pv`
-
-### Implementação do toggle
-1. Adicionar variável `let pvCollapsed = false`
-2. Criar função `togglePV()`:
-   ```javascript
-   function togglePV() {
-     pvCollapsed = !pvCollapsed;
-     document.getElementById('app').style.gridTemplateColumns = pvCollapsed
-       ? '230px 1fr 32px'
-       : '230px 1fr 420px';
-     document.getElementById('pv').setAttribute('data-collapsed', pvCollapsed);
-     document.getElementById('pv-toggle-btn').textContent = pvCollapsed ? '›' : '‹';
-   }
-   ```
-3. Adicionar `transition: grid-template-columns 0.25s ease` no CSS do `#app`
-
-### Botão toggle
-- Adicionar no `.pv-header`, à esquerda do texto "ARQUIVOS GERADOS"
-- Estilo: `background: transparent; border: 1px solid var(--bd); color: var(--gd); width: 20px; height: 20px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;`
-- Texto inicial: `‹` (indica "pode fechar"). Quando colapsado: `›` (indica "pode abrir")
-- `id="pv-toggle-btn"`
-
-### Estado colapsado — CSS
-Adicionar no `<style>`:
-```css
-#pv[data-collapsed="true"] .pv-header span,
-#pv[data-collapsed="true"] .pv-tip,
-#pv[data-collapsed="true"] .pvtabs,
-#pv[data-collapsed="true"] .pvc,
-#pv[data-collapsed="true"] .pvbar,
-#pv[data-collapsed="true"] label {
-  display: none;
-}
-
-#pv[data-collapsed="true"] {
-  cursor: pointer;
-  justify-content: flex-start;
-}
-
-#pv[data-collapsed="true"] .pv-header {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  transform: rotate(180deg);
-  justify-content: center;
-  padding: 12px 6px;
-  height: auto;
-  flex: 1;
-  border-bottom: none;
-  letter-spacing: 2px;
-  font-size: 9px;
-  color: var(--gd);
-}
-```
-
-Ao clicar na barra colapsada (no `aside#pv` com `data-collapsed="true"`):
 ```javascript
-// Adicionar no aside#pv:
-// onclick="if(pvCollapsed) togglePV()"
+function gChangelog() {
+  if (!S.meta.useGit) return '';
+  const name = S.meta.name || 'NEEDS CLARIFICATION';
+  const phases = S.plan.phases;
+
+  const phaseSections = phases.length
+    ? phases.map((ph, i) => {
+        const version = `0.${i + 1}.0`;
+        const label = ph.name || `Fase ${i + 1}`;
+        const goal = ph.goal || 'NEEDS CLARIFICATION';
+        const deadline = ph.deadline ? ` — ${ph.deadline}` : '';
+        const deliverables = ph.deliverables
+          ? ph.deliverables.split('\n').filter(Boolean).map(d => `- ${d.trim()}`).join('\n')
+          : '- NEEDS CLARIFICATION';
+        return `## [${version}]${deadline}\n### ${label}\n> ${goal}\n\n### Added\n${deliverables}`;
+      }).join('\n\n---\n\n')
+    : '## [0.1.0]\n### Added\n- NEEDS CLARIFICATION';
+
+  return `# Changelog — ${name}
+
+Todas as mudanças notáveis são documentadas aqui.
+Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
+Versionamento: [Semantic Versioning](https://semver.org/lang/pt-BR/)
+
+> **Instrução para o Git Master:** a cada PR mergeado, mover os itens concluídos
+> de \`[Unreleased]\` para a versão correspondente com a data real de entrega.
+
+***
+
+## [Unreleased]
+
+### Added
+### Changed
+### Fixed
+### Security
+
+***
+
+${phaseSections}
+`;
+}
 ```
 
-### Restrição mobile
-O toggle só deve funcionar em desktop (≥1101px). Em resoluções menores o painel já usa o sistema de overlay existente — não interferir.
-Envolver a lógica de togglePV com:
+### 2. Adicionar CHANGELOG.md ao array FILES
+
+Localizar a constante:
 ```javascript
-if (window.innerWidth < 1101) return;
+const FILES = ['CLAUDE.md', 'SPEC.md', 'PLAN.md', 'AGENTS.md', 'RULES.md', 'HOOKS.md', 'SLASH-COMMANDS.md', 'SECURITY.md'];
 ```
+
+Substituir por lógica condicional que adiciona CHANGELOG.md quando Git estiver ativo:
+
+```javascript
+// Em vez de alterar FILES diretamente, criar função getFiles():
+function getFiles() {
+  const base = ['CLAUDE.md','SPEC.md','PLAN.md','AGENTS.md','RULES.md','HOOKS.md','SLASH-COMMANDS.md','SECURITY.md'];
+  return S.meta.useGit ? [...base, 'CHANGELOG.md'] : base;
+}
+```
+
+Substituir toda referência a `FILES` no código por `getFiles()`.
+As referências existentes são: `renderPVOverlay()`, `renderPVTabs()`, `generateAll()`, `gCmds()` (onde lista os arquivos).
+Verificar todas as ocorrências antes de substituir.
+
+### 3. Adicionar gChangelog() ao array de geradores
+
+Localizar onde os geradores são chamados em sequência (dentro de renderPVTabs, renderPVOverlay e generateAll):
+```javascript
+const gens = [gClaude, gSpec, gPlan, gAgents, gRules, gHooks, gCmds, gSecurity];
+```
+
+Substituir por:
+```javascript
+const gens = [gClaude, gSpec, gPlan, gAgents, gRules, gHooks, gCmds, gSecurity, ...(S.meta.useGit ? [gChangelog] : [])];
+```
+
+### 4. Reatividade
+
+A função `setUseGit()` já dispara `renderStep()` e `schedPV()`, então o CHANGELOG.md vai aparecer/desaparecer automaticamente quando o usuário alternar Sim/Não na pergunta de Git. Nenhuma alteração adicional necessária na reatividade.
 
 ---
 
-## Regras gerais
-- Zero CSS novo além do especificado acima
-- Zero quebra de funcionalidade existente (export, copy, tabs, auto-preview)
-- Testar que o colapso não quebra o `renderPVOverlay()` mobile
-- O estado `pvCollapsed` não precisa ser persistido no JSON nem na URL hash
+## Regras
+- Zero alteração em funções existentes além das substituições de FILES descritas acima
+- gChangelog() retorna string vazia se !S.meta.useGit (nunca retorna null)
+- Se S.plan.phases estiver vazio, gerar estrutura mínima com NEEDS CLARIFICATION
+- Testar: marcar Git como Sim → CHANGELOG.md aparece nas abas do preview
+- Testar: desmarcar Git → CHANGELOG.md some das abas
+- Testar: exportar JSON com Git ativo → reimportar → CHANGELOG.md continua aparecendo
