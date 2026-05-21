@@ -157,6 +157,16 @@ select option{background:var(--bp)}
 .modal pre{font-size:12px;line-height:1.7;color:var(--gd);white-space:pre-wrap;word-wrap:break-word;background:#030703;padding:12px;border:1px solid #1a3a1a}
 .modal-footer{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--bd);flex-wrap:wrap}
 
+/* TEMPLATE MODAL */
+.tmpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.tmpl-card{background:rgba(0,255,65,.02);border:1px solid var(--bd);padding:14px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:7px}
+.tmpl-card:hover{border-color:var(--g);background:rgba(0,255,65,.07);box-shadow:0 0 12px rgba(0,255,65,.15)}
+.tmpl-card-title{font-size:13px;font-weight:700;color:var(--g);letter-spacing:.5px}
+.tmpl-card-desc{font-size:11px;color:var(--gd);line-height:1.5;font-weight:400}
+.tmpl-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.tmpl-badge{font-size:10px;background:rgba(0,187,48,.1);border:1px solid #1a4a1a;color:var(--gd);padding:2px 7px;font-weight:600;letter-spacing:.3px}
+@media(max-width:540px){.tmpl-grid{grid-template-columns:1fr}}
+
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 .cur::after{content:'█';animation:blink 1s infinite;font-size:13px}
 .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);border:1px solid var(--g);background:#001807;color:var(--g);padding:10px 18px;font-family:var(--f);font-size:13px;z-index:9001;pointer-events:none;font-weight:600;white-space:nowrap}
@@ -309,6 +319,17 @@ body.beginner .advanced-only{display:none!important}
   <div class="pvc" id="pvc2" style="flex:1;overflow-y:auto"></div>
 </div>
 
+<div class="modal-overlay" id="template-modal" style="display:none" onclick="if(event.target===this)closeTemplateModal()">
+  <div class="modal" style="max-width:620px">
+    <h3>📁 Carregar Template de Projeto</h3>
+    <p style="color:var(--gd);font-size:13px;margin-bottom:4px;line-height:1.6">Escolha um template para preencher automaticamente os campos principais. Você poderá editar tudo depois.</p>
+    <div class="tmpl-grid" id="tmpl-grid"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeTemplateModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="team-modal" style="display:none">
   <div class="modal">
     <h3>📋 Instruções para o time técnico</h3>
@@ -372,6 +393,62 @@ const DEF_CMDS=[
   {name:'/git-commit',goal:'Fluxo completo de versionamento: verifica aprovação do Code Reviewer, confirma testes passando, cria commit semântico e abre PR.',when:'SOMENTE após /code-review aprovado e /testar com todos passando.',args:'descrição da feature ou fix concluído',reads:'SPEC.md, PLAN.md, RULES.md',gitOnly:true},
 ];
 
+// ── FASE 2: TEMPLATES ────────────────────────────────────────
+const TEMPLATES=[
+  {
+    label:'API REST Simples',
+    desc:'API de dados com autenticação JWT e documentação OpenAPI',
+    badges:['TypeScript','Node.js','Express','PostgreSQL'],
+    state:{
+      meta:{name:'API REST',type:'api-rest',stage:'mvp',audience:'Desenvolvedores frontend',pitch:'API de dados com autenticação JWT e documentação OpenAPI',kpis:[],useGit:true},
+      domain:{problem:'',objectives:[],stakeholders:[],useCases:[],nonGoals:[],nfrs:[]},
+      arch:{style:'monolito-modular',languages:['TypeScript'],frameworks:['Node.js','Express','Zod'],databases:['PostgreSQL'],messaging:[],integrations:[],scalability:''},
+      quality:{testTypes:['Unitário','Integração'],testTools:['Jest','Supertest'],obs:'',envs:[],cicd:'',security:'',secChecks:['sec-login','sec-roles']},
+      plan:{phases:[]},
+      rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+    }
+  },
+  {
+    label:'SaaS com Autenticação',
+    desc:'Plataforma SaaS com planos, pagamento e painel do usuário',
+    badges:['TypeScript','Next.js','NestJS','PostgreSQL','Redis'],
+    state:{
+      meta:{name:'SaaS App',type:'app-web',stage:'mvp',audience:'Usuários finais B2C',pitch:'Plataforma SaaS com planos, pagamento e painel do usuário',kpis:[],useGit:true},
+      domain:{problem:'',objectives:[],stakeholders:[],useCases:[],nonGoals:[],nfrs:[]},
+      arch:{style:'app-web',languages:['TypeScript'],frameworks:['Next.js','NestJS','Prisma'],databases:['PostgreSQL','Redis'],messaging:['Bull'],integrations:[],scalability:''},
+      quality:{testTypes:['Unitário','Integração','E2E'],testTools:['Jest','Playwright'],obs:'',envs:[],cicd:'',security:'',secChecks:['sec-login','sec-lgpd','sec-roles','sec-cripto','sec-logs']},
+      plan:{phases:[]},
+      rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+    }
+  },
+  {
+    label:'Automação N8N',
+    desc:'Automatiza fluxo de dados entre sistemas via N8N com webhooks e filas',
+    badges:['JavaScript','N8N','PostgreSQL','RabbitMQ'],
+    state:{
+      meta:{name:'Automação N8N',type:'automacao',stage:'mvp',audience:'Equipe operacional interna',pitch:'Automatiza fluxo de dados entre sistemas via N8N com webhooks e filas',kpis:[],useGit:true},
+      domain:{problem:'',objectives:[],stakeholders:[],useCases:[],nonGoals:[],nfrs:[]},
+      arch:{style:'event-driven',languages:['JavaScript','Node.js'],frameworks:['N8N'],databases:['PostgreSQL'],messaging:['Redis','RabbitMQ'],integrations:['Webhook','REST API'],scalability:''},
+      quality:{testTypes:['Integração','E2E'],testTools:['Playwright'],obs:'',envs:[],cicd:'',security:'',secChecks:['sec-login','sec-logs']},
+      plan:{phases:[]},
+      rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+    }
+  },
+  {
+    label:'E-commerce',
+    desc:'Loja virtual com catálogo, carrinho, checkout e painel admin',
+    badges:['TypeScript','Next.js','Prisma','PostgreSQL','Stripe'],
+    state:{
+      meta:{name:'E-commerce',type:'monolito',stage:'mvp',audience:'Lojistas e clientes finais',pitch:'Loja virtual com catálogo, carrinho, checkout e painel admin',kpis:[],useGit:true},
+      domain:{problem:'',objectives:[],stakeholders:[],useCases:[],nonGoals:[],nfrs:[]},
+      arch:{style:'monolito-modular',languages:['TypeScript'],frameworks:['Next.js','Prisma'],databases:['PostgreSQL','Redis'],messaging:['Bull'],integrations:['Stripe','SendGrid'],scalability:''},
+      quality:{testTypes:['Unitário','Integração','E2E'],testTools:['Jest','Playwright'],obs:'',envs:[],cicd:'',security:'',secChecks:['sec-login','sec-lgpd','sec-roles','sec-cripto','sec-logs']},
+      plan:{phases:[]},
+      rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+    }
+  },
+];
+
 const SEC_OPTS=[
   {id:'sec-login',  label:'Quero que os logins sejam seguros',         sub:'Autenticação com senha forte e proteção contra invasões',     val:'Autenticação segura com bcrypt/Argon2id, JWT em HttpOnly cookie, rate limiting e bloqueio após tentativas falhas.'},
   {id:'sec-lgpd',   label:'Quero seguir a LGPD',                       sub:'Lei Geral de Proteção de Dados do Brasil',                    val:'Conformidade LGPD: coleta mínima, consentimento explícito, direito de exclusão e portabilidade.'},
@@ -428,6 +505,10 @@ function renderFooter(){
     <button class="sb-btn btn-p" onclick="generateAll()">
       <span class="sb-btn-icon">⚡</span>
       <span class="sb-btn-text"><strong>Gerar Arquivos</strong><small>Cria CLAUDE.md, SPEC.md e mais</small></span>
+    </button>
+    <button class="sb-btn" onclick="openTemplateModal()">
+      <span class="sb-btn-icon">📁</span>
+      <span class="sb-btn-text"><strong>Templates</strong><small>Comece com um projeto pré-preenchido</small></span>
     </button>
     <button class="sb-btn btn-a" onclick="openTeamModal()">
       <span class="sb-btn-icon">📋</span>
@@ -1875,6 +1956,49 @@ ${prSection}
 ${secretsSection}
 ${incidentSection}
 `;
+}
+
+// ── FASE 2: TEMPLATES ────────────────────────────────────────
+function openTemplateModal(){
+  const grid=document.getElementById('tmpl-grid');
+  grid.innerHTML=TEMPLATES.map((t,i)=>`
+    <div class="tmpl-card" onclick="loadTemplate(${i})">
+      <div class="tmpl-card-title">${t.label}</div>
+      <div class="tmpl-card-desc">${t.desc}</div>
+      <div class="tmpl-badges">${t.badges.map(b=>`<span class="tmpl-badge">${b}</span>`).join('')}</div>
+    </div>`).join('');
+  document.getElementById('template-modal').style.display='flex';
+}
+
+function closeTemplateModal(){
+  document.getElementById('template-modal').style.display='none';
+}
+
+function loadTemplate(i){
+  const tmpl=TEMPLATES[i];
+  if(S.meta.name&&!confirm(`Carregar o template "${tmpl.label}"? O estado atual será substituído.`)) return;
+  const ts=tmpl.state;
+  Object.assign(S.meta,    ts.meta);
+  Object.assign(S.domain,  ts.domain);
+  Object.assign(S.arch,    ts.arch);
+  Object.assign(S.quality, ts.quality);
+  Object.assign(S.plan,    ts.plan);
+  Object.assign(S.rules,   ts.rules);
+  // Sincroniza agentes e comandos com base no useGit do template
+  const useGit=ts.meta.useGit;
+  S.agents.list=DEF_AGENTS.filter(a=>!a.gitOnly).map(a=>({...a}));
+  S.cmds.list=DEF_CMDS.filter(c=>!c.gitOnly).map(c=>({...c}));
+  if(useGit){
+    const gitAgent=DEF_AGENTS.find(a=>a.gitOnly);
+    const gitCmd=DEF_CMDS.find(c=>c.gitOnly);
+    if(gitAgent) S.agents.list.push({...gitAgent});
+    if(gitCmd) S.cmds.list.push({...gitCmd});
+  }
+  closeTemplateModal();
+  render();
+  schedPV();
+  stateToHash();
+  toast(`Template "${tmpl.label}" carregado!`);
 }
 
 // ── FASE 1: URL HASH STATE ────────────────────────────────────
