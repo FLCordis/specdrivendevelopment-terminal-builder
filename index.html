@@ -337,7 +337,7 @@ const FILES=['CLAUDE.md','SPEC.md','PLAN.md','AGENTS.md','RULES.md','HOOKS.md','
 let cur=0, pvTab=0, appMode='beginner';
 
 let S={
-  meta:{name:'',type:'',stage:'',audience:'',pitch:'',kpis:[]},
+  meta:{name:'',type:'',stage:'',audience:'',pitch:'',kpis:[],useGit:null},
   domain:{problem:'',objectives:[],stakeholders:[],useCases:[],nonGoals:[],nfrs:[]},
   arch:{languages:[],frameworks:[],databases:[],messaging:[],style:'',integrations:[],scalability:''},
   quality:{testTypes:[],testTools:[],obs:'',envs:[],cicd:'',security:'',secChecks:[]},
@@ -356,6 +356,7 @@ const DEF_AGENTS=[
   {name:'DevOps',resp:'Configura CI/CD, ambientes, monitoramento, escalabilidade e infraestrutura.',arts:'HOOKS.md, RULES.md, SECURITY.md',style:'Focado em automação, segurança de infra, observabilidade e zero-downtime deploy'},
   {name:'DBA (Banco de Dados)',resp:'Modela o banco, define índices, constraints, relacionamentos e estratégia de queries. Previne N+1, otimiza performance e define estratégia de cache e paginação.',arts:'SPEC.md, RULES.md, PLAN.md',style:'Focado em modelagem correta, performance de queries, integridade de dados e escalabilidade do banco'},
   {name:'Code Reviewer',resp:'Revisão obrigatória após qualquer /implementar. Analisa qualidade, segurança, performance, manutenibilidade e conformidade com SPEC, RULES e SECURITY. Bloqueia merge se encontrar problemas críticos.',arts:'SPEC.md, RULES.md, SECURITY.md, PLAN.md',style:'Criterioso e objetivo. Aponta problemas com severidade (Crítico/Alto/Médio/Baixo), explica o motivo e sugere a correção exata. Nunca aprova código com issue Crítico ou Alto sem resolução.'},
+  {name:'Git Master',resp:'Responsável exclusivo por commits, branches e PRs. NUNCA é chamado diretamente — só pode ser acionado pelo Orquestrador após o Code Reviewer emitir aprovação explícita (sem issues Crítico/Alto + todos os testes passando).',arts:'SPEC.md, PLAN.md, RULES.md',style:'Segue Conventional Commits. Referencia sempre a fase do PLAN.md no commit. Nunca sobe código quebrado.',implicit:true,gitOnly:true},
 ];
 
 const DEF_CMDS=[
@@ -367,6 +368,7 @@ const DEF_CMDS=[
   {name:'/validar',goal:'Verificar se mudança está alinhada com SPEC/PLAN/RULES/SECURITY',when:'Antes de abrir PR',args:'[descrição da mudança]',reads:'SPEC.md, PLAN.md, RULES.md, SECURITY.md'},
   {name:'/sec-review',goal:'Fazer revisão de segurança de um componente ou PR',when:'Antes de qualquer merge com código de auth, dados ou integrações',args:'[arquivo ou componente]',reads:'SECURITY.md, RULES.md'},
   {name:'/db-review',goal:'Revisar modelagem, queries e índices do banco de dados',when:'Ao criar/alterar models, migrations ou queries complexas',args:'[model ou migration]',reads:'SPEC.md, RULES.md'},
+  {name:'/git-commit',goal:'Fluxo completo de versionamento: verifica aprovação do Code Reviewer, confirma testes passando, cria commit semântico e abre PR.',when:'SOMENTE após /code-review aprovado e /testar com todos passando.',args:'descrição da feature ou fix concluído',reads:'SPEC.md, PLAN.md, RULES.md',gitOnly:true},
 ];
 
 const SEC_OPTS=[
@@ -379,11 +381,25 @@ const SEC_OPTS=[
 
 // ── BOOT ──────────────────────────────────────────────────────
 function init(){
-  if(!S.agents.list.length) S.agents.list=DEF_AGENTS.map(a=>({...a}));
-  if(!S.cmds.list.length)   S.cmds.list=DEF_CMDS.map(c=>({...c}));
+  if(!S.agents.list.length) S.agents.list=DEF_AGENTS.filter(a=>!a.gitOnly).map(a=>({...a}));
+  if(!S.cmds.list.length)   S.cmds.list=DEF_CMDS.filter(c=>!c.gitOnly).map(c=>({...c}));
   renderFooter();
   checkMobile();
   render();
+}
+
+function setUseGit(val){
+  S.meta.useGit=val;
+  const gitAgent=DEF_AGENTS.find(a=>a.gitOnly);
+  const gitCmd=DEF_CMDS.find(c=>c.gitOnly);
+  if(val){
+    if(gitAgent&&!S.agents.list.find(a=>a.gitOnly)) S.agents.list.push({...gitAgent});
+    if(gitCmd&&!S.cmds.list.find(c=>c.gitOnly)) S.cmds.list.push({...gitCmd});
+  } else {
+    S.agents.list=S.agents.list.filter(a=>!a.gitOnly);
+    S.cmds.list=S.cmds.list.filter(c=>!c.gitOnly);
+  }
+  renderStep(); schedPV(); renderSB();
 }
 
 function renderFooter(){
@@ -546,6 +562,18 @@ function sMeta(){
     <div class="fg"><label>${optLabel('Em que fase?')}</label>
     <select onchange="u('meta.stage',this.value)">${opts([['','-- Escolha --'],['poc','Testando a ideia (PoC)'],['mvp','Primeira versão (MVP)'],['producao','Já em uso'],['refatoracao','Melhorando algo'],['modulo','Novo módulo']],m.stage)}</select></div>
   </div>
+  <div class="fg"><label>O projeto será versionado com Git?</label>
+  ${transl('Controle de versão com commits semânticos, branches e PRs.')}
+  <div style="display:flex;gap:10px;margin-top:4px">
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;padding:8px 14px;border:1px solid ${m.useGit===true?'var(--g)':'#1a3a1a'};background:${m.useGit===true?'rgba(0,255,65,.08)':'transparent'};text-transform:none;letter-spacing:0;font-size:13px;font-weight:600">
+      <input type="radio" name="useGit" value="sim" ${m.useGit===true?'checked':''} onchange="setUseGit(true)" style="accent-color:var(--g)"> Sim
+    </label>
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;padding:8px 14px;border:1px solid ${m.useGit===false?'var(--g)':'#1a3a1a'};background:${m.useGit===false?'rgba(0,255,65,.08)':'transparent'};text-transform:none;letter-spacing:0;font-size:13px;font-weight:600">
+      <input type="radio" name="useGit" value="nao" ${m.useGit===false?'checked':''} onchange="setUseGit(false)" style="accent-color:var(--g)"> Não
+    </label>
+  </div>
+  <div class="opt-note">// Define se o agente Git Master e o comando /git-commit serão incluídos na documentação.</div>
+  </div>
   <div class="fg"><label>${optLabel('Quem vai usar?')}</label>
   <input type="text" value="${e(m.audience)}" placeholder="Ex: Clientes do e-commerce, equipe de RH, médicos e recepcionistas" oninput="u('meta.audience',this.value)"></div>
   <div class="fg"><label>${reqLabel('Em uma frase: qual o valor principal?')}</label>
@@ -664,7 +692,7 @@ function phItem(ph,i){
 
 function sAgents(){
   const a=S.agents;
-  const vis=appMode==='beginner'?a.list.filter(ag=>!ag.implicit):a.list;
+  const vis=appMode==='beginner'?a.list.filter(ag=>!ag.implicit||ag.gitOnly):a.list;
   return hdr2(5,'AGENTES DE IA',['Especialistas que o Claude pode assumir.','O Orquestrador coordena tudo e decide qual acionar.','DBA e Agente de Segurança já vêm configurados.'])+`
   ${appMode==='beginner'?`<div class="info">🤖 <strong style="color:var(--g)">Como funciona:</strong><br>
   Um <strong>Orquestrador</strong> lê toda a documentação e decide qual especialista chamar em cada momento. Você descreve o que quer — ele cuida do resto, incluindo segurança e banco de dados.</div>`:''}
@@ -676,7 +704,7 @@ function sAgents(){
 function agItem(ag,i){
   return`<div class="li"><div class="lih"><span class="lit" style="${ag.implicit?'color:var(--g)':'color:var(--a)'}">${ag.implicit?'⊙ ':''}${e(ag.name||'Novo Agente')}</span>
   <button class="btn btn-sm btn-d" onclick="remAg(${i})">✕</button></div>
-  ${ag.implicit?`<div class="info" style="margin-bottom:8px;font-size:12px">// Coordena todos os outros. Lê docs e decide qual especialista acionar — incluindo segurança e banco.</div>`:''}
+  ${ag.gitOnly?`<div class="info" style="margin-bottom:8px;font-size:12px">// Agente exclusivo de versionamento. Só é acionado pelo Orquestrador após aprovação do Code Reviewer e todos os testes passando.</div>`:ag.implicit?`<div class="info" style="margin-bottom:8px;font-size:12px">// Coordena todos os outros. Lê docs e decide qual especialista acionar — incluindo segurança e banco.</div>`:''}
   <div class="g2">
     <div class="fg"><label>Nome</label><input type="text" value="${e(ag.name||'')}" placeholder="Ex: DBA, Arquiteto" oninput="li('agents.list',${i},'name',this.value)"></div>
     <div class="fg"><label>Arquivos que lê primeiro</label><input type="text" value="${e(ag.arts||'')}" placeholder="Ex: SPEC.md, RULES.md" oninput="li('agents.list',${i},'arts',this.value)"></div>
@@ -751,7 +779,8 @@ function sReview(){
   ${w.length?`<div class="warn">⚠ ${w.length} campo(s) importante(s) vazio(s):<br>${w.map(x=>`• ${x}`).join('<br>')}<br><br>Pode gerar mesmo assim. O time completa os [NEEDS CLARIFICATION].</div>`:`<div class="info">✓ Boa cobertura! Pronto para gerar.</div>`}
   <div class="rv"><h3>◈ Projeto</h3>${rr('Nome',S.meta.name)}${rr('Tipo',S.meta.type)}${rr('Estágio',S.meta.stage)}${rr('Pitch',S.meta.pitch)}</div>
   <div class="rv"><h3>◈ Problema & Usuários</h3>${rr('Problema',S.domain.problem?S.domain.problem.substring(0,80)+'…':'')}${rr('Perfis',S.domain.stakeholders.length+' perfis')}${rr('Funcionalidades',S.domain.useCases.length+' cadastradas')}</div>
-  <div class="rv"><h3>◈ Tecnologia & Plano</h3>${rr('Arquitetura',S.arch.style)}${rr('Fases',S.plan.phases.length+' fases')}${rr('Agentes',S.agents.list.length+' configurados')}${rr('Segurança',S.quality.secChecks.length+' requisitos marcados')}</div>
+  <div class="rv"><h3>◈ Tecnologia & Plano</h3>${rr('Arquitetura',S.arch.style)}${rr('Fases',S.plan.phases.length+' fases')}${rr('Agentes',S.agents.list.length+' configurados')}${rr('Segurança',S.quality.secChecks.length+' requisitos marcados')}${rr('Git',S.meta.useGit===true?'✅ Git Master ativo':S.meta.useGit===false?'⬜ Sem versionamento Git':'⚠ Não definido')}</div>
+  ${S.meta.useGit===null?`<div class="warn">ℹ Git não definido — responda "O projeto será versionado com Git?" na Etapa 0 para configurar o Git Master e o /git-commit.</div>`:''}
   <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn btn-p" onclick="generateAll()" style="font-size:14px;padding:0 20px;height:38px">⚡ GERAR TODOS OS ARQUIVOS</button>
     <button class="btn btn-a" onclick="openTeamModal()">📋 Para o time técnico</button>
@@ -900,7 +929,19 @@ function importJSON(ev){
   const f=ev.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=e=>{
-    try{Object.assign(S,JSON.parse(e.target.result));render();toast('Projeto carregado!');}
+    try{
+      Object.assign(S,JSON.parse(e.target.result));
+      // Re-sync gitOnly items based on loaded useGit value
+      const gitAgent=DEF_AGENTS.find(a=>a.gitOnly);
+      const gitCmd=DEF_CMDS.find(c=>c.gitOnly);
+      S.agents.list=S.agents.list.filter(a=>!a.gitOnly);
+      S.cmds.list=S.cmds.list.filter(c=>!c.gitOnly);
+      if(S.meta.useGit===true){
+        if(gitAgent) S.agents.list.push({...gitAgent});
+        if(gitCmd) S.cmds.list.push({...gitCmd});
+      }
+      render();toast('Projeto carregado!');
+    }
     catch{toast('Erro no arquivo JSON',1);}
   };
   r.readAsText(f);
@@ -1146,8 +1187,40 @@ ${phs}
 }
 
 function gAgents(){
-  const orch=S.agents.list.find(a=>a.implicit);
-  const specs=S.agents.list.filter(a=>!a.implicit);
+  const orch=S.agents.list.find(a=>a.implicit&&!a.gitOnly);
+  const gitMaster=S.agents.list.find(a=>a.gitOnly);
+  const specs=S.agents.list.filter(a=>!a.implicit&&!a.gitOnly);
+  const codeReviewer=specs.find(a=>a.name==='Code Reviewer');
+  const reviewerResp=codeReviewer
+    ? codeReviewer.resp + (S.meta.useGit ? ' Após aprovação sem issues Crítico/Alto + testes passando, emite sinal explícito "✅ APROVADO — Git Master pode ser acionado" para liberar o versionamento. Sem essa sinalização, o Git Master não age.' : '')
+    : '[NEEDS CLARIFICATION]';
+
+  const gitMasterSection=S.meta.useGit&&gitMaster?`
+---
+
+## Git Master
+
+> **Agente exclusivo de versionamento.** NUNCA é chamado diretamente.
+
+| Campo | Valor |
+|-------|-------|
+| **Responsabilidades** | ${gitMaster.resp} |
+| **Arquivos** | \`${(gitMaster.arts||'').replace(/,\s*/g,'`, `')}\` |
+| **Estilo** | ${gitMaster.style} |
+
+\`\`\`
+Fluxo obrigatório antes de qualquer commit:
+  1. Implementação concluída
+  2. /code-review → sem issues Crítico ou Alto
+  3. /testar → todos os testes passando (Playwright, Jest, etc.)
+  4. Code Reviewer emite: "✅ APROVADO — Git Master pode ser acionado"
+  5. Orquestrador aciona Git Master
+
+  ❌ NUNCA commitar com testes falhando
+  ❌ NUNCA commitar com issue Crítico ou Alto aberto
+\`\`\`
+`:'';
+
   return `# AGENTS.md — Agentes de IA
 
 > Papéis especializados para uso com Claude Code.
@@ -1175,14 +1248,16 @@ Receber tarefa → Ler docs → Identificar agente → Acionar com contexto
 
 ## Agentes Especialistas
 
-${specs.map(a=>`### ${a.name||'[NEEDS CLARIFICATION]'}
+${specs.map(a=>{
+  const resp=a.name==='Code Reviewer'?reviewerResp:(a.resp||'[NEEDS CLARIFICATION]');
+  return `### ${a.name||'[NEEDS CLARIFICATION]'}
 | Campo | Valor |
 |-------|-------|
-| **Responsabilidades** | ${a.resp||'[NEEDS CLARIFICATION]'} |
+| **Responsabilidades** | ${resp} |
 | **Arquivos** | \`${(a.arts||'').replace(/,\s*/g,'`, `')}\` |
 | **Estilo** | ${a.style||'[NEEDS CLARIFICATION]'} |
-`).join('\n')||'> [NEEDS CLARIFICATION]'}
-
+`;}).join('\n')||'> [NEEDS CLARIFICATION]'}
+${gitMasterSection}
 ---
 
 ## Como Usar
@@ -1354,7 +1429,20 @@ Exemplos:
 - PRs com auth, permissões ou dados sensíveis: revisão de segurança obrigatória (/sec-review).
 - PRs com models, migrations ou queries: revisão do agente DBA (/db-review).
 - Nenhum merge com testes falhando ou vulnerabilidade crítica no \`npm audit\`.
-`;
+${S.meta.useGit?`
+---
+
+## Fluxo de Versionamento com Git Master
+
+Cadeia obrigatória: implementar → /code-review (sem Crítico/Alto) → /testar (todos passando) → Code Reviewer: "✅ APROVADO" → Git Master: commit + PR
+
+Padrão Conventional Commits: feat, fix, refactor, test, docs, chore, sec, perf
+Formato: \`tipo(escopo): descrição\` + corpo com referência à fase do PLAN.md
+
+Branches:
+- \`main\`/\`master\`: nunca commitar direto — sempre via PR aprovado
+- Features: \`feat/nome-da-feature\` | Fixes: \`fix/descricao-do-bug\`
+`:''}`;
 }
 
 function gHooks(){
@@ -1423,6 +1511,63 @@ Regras:
 
 function gCmds(){
   const cmd0=S.cmds.list[0]||{name:'/corrigir',reads:'SPEC.md, RULES.md, SECURITY.md',goal:'Revisar código',args:'[arquivo]'};
+  const gitCommitFile=S.meta.useGit?`
+
+---
+
+## \`.claude/commands/git-commit.md\`
+
+\`\`\`markdown
+---
+description: "Fluxo completo de versionamento: verifica aprovação do Code Reviewer, confirma testes passando, cria commit semântico e abre PR."
+argument-hint: "descrição da feature ou fix concluído"
+---
+
+Projeto: **${S.meta.name||'[PROJETO]'}**
+
+Leia antes de começar:
+- \`SPEC.md\`
+- \`PLAN.md\`
+- \`RULES.md\`
+
+## Checklist de Pré-requisitos
+
+Verifique cada item antes de prosseguir. Se qualquer item NÃO estiver confirmado, PARE e informe o usuário.
+
+- [ ] /code-review foi executado e não há issues Crítico ou Alto em aberto
+- [ ] /testar foi executado e todos os testes estão passando (Playwright, Jest, etc.)
+- [ ] Code Reviewer emitiu explicitamente: "✅ APROVADO — Git Master pode ser acionado"
+- [ ] Não há arquivos não intencionais no staging area
+
+❌ Se qualquer item acima não estiver confirmado: PARE. Informe qual pré-requisito está pendente e aguarde resolução.
+
+## Fluxo de Commit
+
+Após confirmação de todos os pré-requisitos:
+
+1. Identifique o tipo de mudança: feat | fix | refactor | test | docs | chore | sec | perf
+2. Identifique o escopo (módulo ou camada afetada)
+3. Referencie a fase do PLAN.md correspondente
+
+**Formato obrigatório:**
+\`\`\`
+tipo(escopo): descrição no imperativo
+
+- Detalhe relevante 1
+- Detalhe relevante 2
+
+Ref: PLAN.md Fase X — [nome da fase]
+\`\`\`
+
+**Branch:**
+- Features: \`feat/nome-da-feature\`
+- Fixes: \`fix/descricao-do-bug\`
+- Nunca commitar direto em main/master
+
+**Argumentos recebidos:** \`$ARGUMENTS\`
+\`\`\`
+`:'';
+
   return `# SLASH-COMMANDS.md — Comandos para Claude Code
 
 > Criar arquivos em \`.claude/commands/\`.
@@ -1460,7 +1605,7 @@ Passos:
 5. Nunca faça ações destrutivas sem confirmação explícita.
 6. Sempre verifique se a mudança respeita SECURITY.md.
 \`\`\`
-`;
+${gitCommitFile}`;
 }
 
 function gSecurity(){
