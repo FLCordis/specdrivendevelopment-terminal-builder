@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Spec-Driven Development Terminal - Flavio Cordis</title>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <style>
 :root{
   --g:#00ff41;--gd:#00bb30;--gk:#004d14;
@@ -381,8 +382,23 @@ const SEC_OPTS=[
 
 // ── BOOT ──────────────────────────────────────────────────────
 function init(){
-  if(!S.agents.list.length) S.agents.list=DEF_AGENTS.filter(a=>!a.gitOnly).map(a=>({...a}));
-  if(!S.cmds.list.length)   S.cmds.list=DEF_CMDS.filter(c=>!c.gitOnly).map(c=>({...c}));
+  const loadedFromHash=hashToState();
+  if(!loadedFromHash){
+    if(!S.agents.list.length) S.agents.list=DEF_AGENTS.filter(a=>!a.gitOnly).map(a=>({...a}));
+    if(!S.cmds.list.length)   S.cmds.list=DEF_CMDS.filter(c=>!c.gitOnly).map(c=>({...c}));
+  } else {
+    // Re-sync gitOnly items based on loaded useGit value
+    const gitAgent=DEF_AGENTS.find(a=>a.gitOnly);
+    const gitCmd=DEF_CMDS.find(c=>c.gitOnly);
+    S.agents.list=S.agents.list.filter(a=>!a.gitOnly);
+    S.cmds.list=S.cmds.list.filter(c=>!c.gitOnly);
+    if(S.meta.useGit===true){
+      if(gitAgent) S.agents.list.push({...gitAgent});
+      if(gitCmd) S.cmds.list.push({...gitCmd});
+    }
+    if(!S.agents.list.length) S.agents.list=DEF_AGENTS.filter(a=>!a.gitOnly).map(a=>({...a}));
+    if(!S.cmds.list.length)   S.cmds.list=DEF_CMDS.filter(c=>!c.gitOnly).map(c=>({...c}));
+  }
   renderFooter();
   checkMobile();
   render();
@@ -402,6 +418,11 @@ function setUseGit(val){
   renderStep(); schedPV(); renderSB();
 }
 
+function copyLink(){
+  stateToHash();
+  navigator.clipboard.writeText(window.location.href).then(()=>toast('Link copiado!'));
+}
+
 function renderFooter(){
   const html=`
     <button class="sb-btn btn-p" onclick="generateAll()">
@@ -411,6 +432,10 @@ function renderFooter(){
     <button class="sb-btn btn-a" onclick="openTeamModal()">
       <span class="sb-btn-icon">📋</span>
       <span class="sb-btn-text"><strong>Para o Time</strong><small>Prompt pronto para o dev</small></span>
+    </button>
+    <button class="sb-btn" onclick="copyLink()">
+      <span class="sb-btn-icon">🔗</span>
+      <span class="sb-btn-text"><strong>Copiar Link</strong><small>Compartilha projeto via URL</small></span>
     </button>
     <button class="sb-btn" onclick="exportJSON()">
       <span class="sb-btn-icon">⬇</span>
@@ -840,12 +865,12 @@ function rmTag(path,idx){
 function u(path,val){
   const pts=path.split('.'); let o=S;
   for(let i=0;i<pts.length-1;i++) o=o[pts[i]];
-  o[pts[pts.length-1]]=val; schedPV(); renderSB();
+  o[pts[pts.length-1]]=val; schedPV(); renderSB(); scheduleHashUpdate();
 }
 function li(path,idx,field,val){
   const pts=path.split('.'); let o=S;
   for(const p of pts) o=o[p];
-  o[idx][field]=val; schedPV();
+  o[idx][field]=val; schedPV(); scheduleHashUpdate();
 }
 function addSth(){S.domain.stakeholders.push({name:'',desc:'',goals:''});renderStep();}
 function remSth(i){S.domain.stakeholders.splice(i,1);renderStep();}
@@ -940,7 +965,7 @@ function importJSON(ev){
         if(gitAgent) S.agents.list.push({...gitAgent});
         if(gitCmd) S.cmds.list.push({...gitCmd});
       }
-      render();toast('Projeto carregado!');
+      render();stateToHash();toast('Projeto carregado!');
     }
     catch{toast('Erro no arquivo JSON',1);}
   };
@@ -1851,6 +1876,36 @@ ${secretsSection}
 ${incidentSection}
 `;
 }
+
+// ── FASE 1: URL HASH STATE ────────────────────────────────────
+let _hashTimer=null;
+
+function stateToHash(){
+  try{
+    const json=JSON.stringify(S);
+    const compressed=LZString.compressToEncodedURIComponent(json);
+    window.location.hash='v1='+compressed;
+  }catch(err){}
+}
+
+function hashToState(){
+  try{
+    const h=window.location.hash;
+    if(!h||!h.startsWith('#v1=')) return false;
+    const compressed=h.slice(4);
+    const json=LZString.decompressFromEncodedURIComponent(compressed);
+    if(!json) return false;
+    const parsed=JSON.parse(json);
+    Object.assign(S,parsed);
+    return true;
+  }catch(err){return false;}
+}
+
+function scheduleHashUpdate(){
+  clearTimeout(_hashTimer);
+  _hashTimer=setTimeout(stateToHash,800);
+}
+
 
 // ── BOOT ──────────────────────────────────────────────────────
 init();
