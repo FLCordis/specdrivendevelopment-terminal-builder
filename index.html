@@ -554,8 +554,10 @@ function openPVOverlay(){renderPVOverlay();document.getElementById('pv-overlay')
 function closePVOverlay(){document.getElementById('pv-overlay').classList.remove('open');}
 
 function renderPVOverlay(){
-  const gens=[gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity];
-  document.getElementById('pvtabs2').innerHTML=FILES.map((f,i)=>
+  const gens=getActiveGens();
+  const files=getActiveFiles();
+  if(pvTab>=files.length) pvTab=0;
+  document.getElementById('pvtabs2').innerHTML=files.map((f,i)=>
     `<div class="pvt${i===pvTab?' active':''}" onclick="switchPV2(${i})">${f}</div>`).join('');
   const md=(gens[pvTab]||(() => ''))();
   document.getElementById('pvc2').innerHTML=`<pre>${hlNC(md)}</pre>`;
@@ -1014,7 +1016,9 @@ function remCmd(i){S.cmds.list.splice(i,1);renderStep();}
 
 // ── PREVIEW ──────────────────────────────────────────────────
 function renderPVTabs(){
-  document.getElementById('pvtabs').innerHTML=FILES.map((f,i)=>
+  const files=getActiveFiles();
+  if(pvTab>=files.length) pvTab=0;
+  document.getElementById('pvtabs').innerHTML=files.map((f,i)=>
     `<div class="pvt${i===pvTab?' active':''}" onclick="switchPV(${i})">${f}</div>`).join('');
 }
 function switchPV(i){pvTab=i;renderPVTabs();renderPV();}
@@ -1027,7 +1031,7 @@ function hlNC(md){
   return md.replace(/\[NEEDS CLARIFICATION[^\]]*\]/g,s=>`<span style="color:#ff5555;font-weight:bold">${s}</span>`);
 }
 function renderPV(){
-  const gens=[gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity];
+  const gens=getActiveGens();
   const md=(gens[pvTab]||(() => ''))();
   document.getElementById('pvc').innerHTML=`<pre>${hlNC(md)}</pre>`;
 }
@@ -1068,8 +1072,9 @@ function copyTeamPrompt(){navigator.clipboard.writeText(document.getElementById(
 // ── COPY / EXPORT ─────────────────────────────────────────────
 function copyOne(){navigator.clipboard.writeText(document.getElementById('pvc').innerText).then(()=>toast('Copiado!'));}
 function copyAll(){
-  const gens=[gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity];
-  const all=gens.map((g,i)=>`<!-- FILE: ${FILES[i]} -->\n\`\`\`md\n${g()}\n\`\`\``).join('\n\n');
+  const gens=getActiveGens();
+  const files=getActiveFiles();
+  const all=gens.map((g,i)=>`<!-- FILE: ${files[i]} -->\n\`\`\`md\n${g()}\n\`\`\``).join('\n\n');
   navigator.clipboard.writeText(all).then(()=>toast('Todos os arquivos copiados!'));
 }
 function exportJSON(){
@@ -2045,6 +2050,145 @@ function loadTemplate(i){
   schedPV();
   stateToHash();
   toast(`Template "${tmpl.label}" carregado!`);
+}
+
+// ── FASE 4: ARQUIVOS GITHUB EXTRAS ───────────────────────────
+function gPRTemplate(){
+  const proj=nc(S.meta.name);
+  const phases=S.plan.phases.map((p,i)=>`- [ ] Fase ${i+1}: ${p.name||'[sem nome]'}`).join('\n')||'- [ ] [definir fase no PLAN.md]';
+  const secChecks=S.quality.secChecks.length>0
+    ? S.quality.secChecks.map(c=>`- [ ] Segurança: ${c} verificado`).join('\n')
+    : '';
+  return `## Descrição
+<!-- O que foi implementado? Referencie a fase do PLAN.md -->
+
+## Tipo de mudança
+- [ ] feat: nova funcionalidade
+- [ ] fix: correção de bug
+- [ ] refactor: refatoração
+- [ ] docs: documentação
+- [ ] test: testes
+- [ ] chore: tarefas de manutenção
+
+## Fase do PLAN.md concluída
+${phases}
+
+## Checklist obrigatório (Code Reviewer)
+- [ ] /code-review executado sem issues Crítico ou Alto
+- [ ] Todos os testes passando (/testar)
+- [ ] Sem regressões nos testes existentes
+- [ ] SPEC.md e PLAN.md atualizados se necessário
+- [ ] Nenhum dado sensível exposto (secrets, tokens, PII)
+${secChecks}
+
+## Como testar
+<!-- Passos para validar esta PR -->
+1.
+2.
+
+## Screenshots (se aplicável)
+<!-- Antes / Depois -->
+
+## Notas adicionais
+<!-- Decisões de design, trade-offs, débito técnico criado -->`;
+}
+
+function gBugReport(){
+  const proj=nc(S.meta.name);
+  const envList=S.quality.envs&&S.quality.envs.length>0
+    ? S.quality.envs.map(e=>`- [ ] ${e}`).join('\n')
+    : '- [ ] development\n- [ ] staging\n- [ ] production';
+  return `---
+name: Bug Report
+about: Reporte um problema em ${proj}
+title: '[BUG] '
+labels: bug
+assignees: ''
+---
+
+## Descrição do Bug
+<!-- Uma descrição clara e concisa do que é o bug -->
+
+## Passos para Reproduzir
+1. Vá para '...'
+2. Clique em '...'
+3. Preencha '...'
+4. Veja o erro
+
+## Comportamento Esperado
+<!-- O que deveria acontecer -->
+
+## Comportamento Atual
+<!-- O que está acontecendo de fato -->
+
+## Screenshots / Logs
+<!-- Se aplicável, adicione screenshots ou logs de erro -->
+
+## Ambiente
+**Ambiente afetado:**
+${envList}
+
+**Versão / Branch:**
+**Sistema Operacional:**
+**Navegador (se aplicável):**
+**Versão do Node.js (se aplicável):**
+
+## Contexto Adicional
+<!-- Qualquer outra informação relevante sobre o problema -->
+
+## Severidade
+- [ ] Crítica — sistema inoperante
+- [ ] Alta — funcionalidade principal bloqueada
+- [ ] Média — workaround existe
+- [ ] Baixa — cosmético / minor`;
+}
+
+function gFeatureRequest(){
+  const proj=nc(S.meta.name);
+  return `---
+name: Feature Request
+about: Sugira uma nova funcionalidade para ${proj}
+title: '[FEAT] '
+labels: enhancement
+assignees: ''
+---
+
+## Problema que Resolve
+<!-- Qual problema do usuário esta feature endereça? -->
+<!-- Ex: "Como usuário, eu preciso de X para poder Y" -->
+
+## Solução Proposta
+<!-- Descrição clara da funcionalidade desejada -->
+
+## Alternativas Consideradas
+<!-- Outras abordagens que você considerou e por que as descartou -->
+
+## Critério de Pronto
+<!-- Como saberemos que esta feature está completa? -->
+- [ ]
+- [ ]
+- [ ]
+
+## Fase do PLAN.md
+<!-- Esta feature se encaixa em qual fase existente, ou é nova? -->
+
+## Impacto Estimado
+- [ ] Alta prioridade — bloqueia usuários
+- [ ] Média prioridade — melhoria significativa de UX
+- [ ] Baixa prioridade — nice to have
+
+## Contexto Adicional
+<!-- Mockups, exemplos de outros produtos, referências -->`;
+}
+
+const GIT_FILES=['PR Template','.github/ISSUE_TEMPLATE/bug_report.md','.github/ISSUE_TEMPLATE/feature_request.md'];
+const GIT_GENS=[gPRTemplate,gBugReport,gFeatureRequest];
+
+function getActiveFiles(){
+  return S.meta.useGit===true ? [...FILES,...GIT_FILES] : [...FILES];
+}
+function getActiveGens(){
+  return S.meta.useGit===true ? [...[gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity],...GIT_GENS] : [gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity];
 }
 
 // ── FASE 1: URL HASH STATE ────────────────────────────────────
