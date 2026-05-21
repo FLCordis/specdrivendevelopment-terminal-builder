@@ -139,6 +139,14 @@ select option{background:var(--bp)}
 .rk{color:var(--gd);min-width:140px;font-weight:600}
 .rv2{color:var(--g);font-weight:500}
 
+/* SPEC SCORE */
+.score-breakdown{margin-top:10px;border-top:1px solid #1a3a1a;padding-top:8px}
+.score-cat{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed #0e2a0e}
+.score-cat-label{color:var(--gd);font-weight:600}
+.score-cat-pts{font-weight:700;min-width:60px;text-align:right}
+.score-toggle{background:none;border:none;color:var(--gd);font-family:var(--f);font-size:11px;cursor:pointer;padding:4px 0;text-transform:uppercase;letter-spacing:.7px;font-weight:700;margin-top:6px}
+.score-toggle:hover{color:var(--g)}
+
 /* SCROLLBARS */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -254,7 +262,7 @@ body.beginner .advanced-only{display:none!important}
     </div>
   </div>
   <div class="hdr-r">
-    <span style="font-size:11px;color:var(--gd);white-space:nowrap;font-weight:600">SPEC: <span id="pct-val">0%</span></span>
+    <span style="font-size:11px;color:var(--gd);white-space:nowrap;font-weight:600"><span id="pct-label">SCORE:</span> <span id="pct-val">0/100</span></span>
   </div>
 </header>
 
@@ -595,7 +603,11 @@ function renderSB(){
   const p=pct(), done=STEPS.filter((_,i)=>isDone(i)).length;
   ['cfill','cfill-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.width=p+'%';});
   ['cpct','cpct-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=`${done} / ${STEPS.length} etapas`;});
-  document.getElementById('pct-val').textContent=p+'%';
+  const ss=calcSpecScore();
+  const pv=document.getElementById('pct-val');
+  if(pv){pv.textContent=ss.score+'/100';pv.style.color=scoreColor(ss.score);}
+  const pctLabel=document.getElementById('pct-label');
+  if(pctLabel) pctLabel.textContent='SCORE:';
 }
 
 function renderBotNav(){
@@ -884,13 +896,25 @@ function sReview(){
   const w=warns();
   const p=pct();
   const {label,color}=meterLabel(p);
+  const ss=calcSpecScore();
+  const sc=ss.score, sclr=scoreColor(sc), slbl=scoreLabel(sc);
+  const bdHtml=ss.breakdown.map(c=>{
+    const cclr=c.pts===c.max?'var(--g)':c.pts===0?'var(--r)':'var(--a)';
+    return`<div class="score-cat"><span class="score-cat-label">${c.label}</span><span class="score-cat-pts" style="color:${cclr}">${c.pts}/${c.max}pts</span></div>`;
+  }).join('');
   return hdr2(8,'REVISÃO FINAL',['Confira antes de gerar os arquivos.','Campos vazios são esperados — o time completa.','Gere e copie para o repositório.'])+`
   <div class="spec-meter">
-    <div class="spec-meter-label" style="color:${color}">◈ COMPLETUDE: ${p}% — ${label}</div>
-    <div class="spec-meter-bar"><div class="spec-meter-fill" style="width:${p}%;background:${color};box-shadow:0 0 6px ${color}"></div></div>
+    <div class="spec-meter-label" style="color:${sclr}">◈ SPEC SCORE: ${sc}/100 — ${slbl}</div>
+    <div class="spec-meter-bar"><div class="spec-meter-fill" style="width:${sc}%;background:${sclr};box-shadow:0 0 6px ${sclr}"></div></div>
     <div style="display:flex;justify-content:space-between;font-size:10px;color:#1a5a1a;font-weight:600">
-      <span>Vazio</span><span>Bom p/ começar</span><span>Pronto p/ engenheiro</span><span>Completo</span>
+      <span>0</span><span>40</span><span>70</span><span>100</span>
     </div>
+    <button class="score-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.textContent=this.textContent.includes('▸')?'▾ Ocultar breakdown':'▸ Ver breakdown'">▸ Ver breakdown</button>
+    <div class="score-breakdown" style="display:none">${bdHtml}</div>
+  </div>
+  <div class="spec-meter" style="margin-top:0">
+    <div class="spec-meter-label" style="color:${color};font-size:12px;font-weight:600">◈ COMPLETUDE: ${p}% — ${label}</div>
+    <div class="spec-meter-bar" style="height:6px"><div class="spec-meter-fill" style="width:${p}%;background:${color}"></div></div>
   </div>
   ${(()=>{
     const vl=runValidations();
@@ -959,6 +983,62 @@ function runValidations(){
   if(S.meta.useGit===null)
     v.push({level:'warn',msg:'Você não respondeu se o projeto usa Git (Etapa 0)',step:0});
   return v;
+}
+
+// ── FASE 5: SPEC SCORE ────────────────────────────────────────
+function calcSpecScore(){
+  const bd=[];
+  // Identidade (20pts)
+  let id=0;
+  if(S.meta.name)     id+=5;
+  if(S.meta.type)     id+=5;
+  if(S.meta.pitch)    id+=5;
+  if(S.meta.audience) id+=5;
+  bd.push({label:'Identidade do projeto',pts:id,max:20});
+  // Problema & Escopo (25pts)
+  let dm=0;
+  if(S.domain.problem&&S.domain.problem.length>50) dm+=10;
+  else if(S.domain.problem) dm+=5;
+  if(S.domain.useCases.length>=1) dm+=5;
+  if(S.domain.useCases.length>=3) dm+=5;
+  if(S.domain.nonGoals.length)    dm+=5;
+  bd.push({label:'Problema & Escopo',pts:Math.min(dm,25),max:25});
+  // Arquitetura (20pts)
+  let ar=0;
+  if(S.arch.style)            ar+=5;
+  if(S.arch.languages.length) ar+=5;
+  if(S.arch.databases.length) ar+=5;
+  if(S.arch.integrations&&S.arch.integrations.length) ar+=5; else if(S.arch.style) ar+=5;
+  bd.push({label:'Arquitetura',pts:Math.min(ar,20),max:20});
+  // Qualidade & Segurança (20pts)
+  let qa=0;
+  if(S.quality.testTypes.length>=1) qa+=5;
+  if(S.quality.testTools.length>=1) qa+=5;
+  if(S.quality.secChecks.length>=2) qa+=5;
+  if(S.quality.cicd)                qa+=5;
+  bd.push({label:'Qualidade & Segurança',pts:Math.min(qa,20),max:20});
+  // Plano (15pts)
+  let pl=0;
+  if(S.plan.phases.length>=1) pl+=5;
+  if(S.plan.phases.length>=2) pl+=5;
+  if(S.plan.phases.length>=1&&S.plan.phases.every(ph=>ph.done)) pl+=5;
+  bd.push({label:'Plano de Entregas',pts:Math.min(pl,15),max:15});
+  const score=bd.reduce((s,c)=>s+c.pts,0);
+  return{score,breakdown:bd};
+}
+
+function scoreColor(s){
+  if(s<40) return'var(--r)';
+  if(s<70) return'var(--a)';
+  return'var(--g)';
+}
+function scoreLabel(s){
+  if(s<20) return'Muito inicial';
+  if(s<40) return'Precisa de mais detalhes';
+  if(s<60) return'Especificação básica';
+  if(s<70) return'Boa especificação';
+  if(s<85) return'Especificação sólida';
+  return'Especificação excelente';
 }
 
 // ── SECURITY HELPERS ─────────────────────────────────────────
