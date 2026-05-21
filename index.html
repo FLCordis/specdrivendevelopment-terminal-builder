@@ -575,7 +575,7 @@ function renderPVOverlay(){
   const files=getActiveFiles();
   if(pvTab>=files.length) pvTab=0;
   document.getElementById('pvtabs2').innerHTML=files.map((f,i)=>
-    `<div class="pvt${i===pvTab?' active':''}" onclick="switchPV2(${i})">${f}</div>`).join('');
+    `<div class="pvt${i===pvTab?' active':''}" onclick="switchPV2(${i})">${f.split('/').pop()}</div>`).join('');
   const md=(gens[pvTab]||(() => ''))();
   document.getElementById('pvc2').innerHTML=`<pre>${hlNC(md)}</pre>`;
 }
@@ -1108,7 +1108,7 @@ function renderPVTabs(){
   const files=getActiveFiles();
   if(pvTab>=files.length) pvTab=0;
   document.getElementById('pvtabs').innerHTML=files.map((f,i)=>
-    `<div class="pvt${i===pvTab?' active':''}" onclick="switchPV(${i})">${f}</div>`).join('');
+    `<div class="pvt${i===pvTab?' active':''}" onclick="switchPV(${i})">${f.split('/').pop()}</div>`).join('');
 }
 function switchPV(i){pvTab=i;renderPVTabs();renderPV();}
 let pvTimer=null;
@@ -1180,11 +1180,10 @@ function clearAll(){
     arch:{languages:[],frameworks:[],databases:[],messaging:[],style:'',integrations:[],scalability:''},
     quality:{testTypes:[],testTools:[],obs:'',envs:[],cicd:'',security:'',secChecks:[]},
     plan:{phases:[]},
-    agents:{list:[]},
+    agents:{list:DEF_AGENTS.filter(a=>!a.gitOnly).map(a=>({...a}))},
     rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
-    cmds:{list:[]}
+    cmds:{list:DEF_CMDS.filter(c=>!c.gitOnly).map(c=>({...c}))}
   };
-  setUseGit(null);
   render(); schedPV();
   history.replaceState(null,'',window.location.pathname);
   toast('Projeto resetado');
