@@ -576,10 +576,18 @@ function setMode(m){
 function render(){renderSB();renderStep();renderPVTabs();schedPV();renderBotNav();}
 
 function renderSB(){
+  const vl=runValidations();
+  const errc=vl.filter(x=>x.level==='error').length;
+  const wrnc=vl.filter(x=>x.level==='warn').length;
   const html=STEPS.map((s,i)=>{
     const st=i===cur?'active':isDone(i)?'done':'todo';
     const ic=i===cur?'▶':isDone(i)?'✓':'○';
-    return`<div class="si ${st}" onclick="goMob(${i})"><span class="si-n">${String(i).padStart(2,'0')}</span><span class="si-l">${s.label}</span><span class="si-c">${ic}</span></div>`;
+    let badge='';
+    if(s.id==='review'&&(errc||wrnc)){
+      const bc=errc?'var(--r)':'var(--a)';
+      badge=`<span style="background:${bc};color:#000;font-size:10px;font-weight:700;padding:1px 5px;margin-left:4px;min-width:18px;text-align:center">${errc||wrnc}</span>`;
+    }
+    return`<div class="si ${st}" onclick="goMob(${i})"><span class="si-n">${String(i).padStart(2,'0')}</span><span class="si-l">${s.label}</span><span class="si-c">${badge||ic}</span></div>`;
   }).join('');
   ['snav','snav-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
   const p=pct(), done=STEPS.filter((_,i)=>isDone(i)).length;
@@ -882,7 +890,17 @@ function sReview(){
       <span>Vazio</span><span>Bom p/ começar</span><span>Pronto p/ engenheiro</span><span>Completo</span>
     </div>
   </div>
-  ${w.length?`<div class="warn">⚠ ${w.length} campo(s) importante(s) vazio(s):<br>${w.map(x=>`• ${x}`).join('<br>')}<br><br>Pode gerar mesmo assim. O time completa os [NEEDS CLARIFICATION].</div>`:`<div class="info">✓ Boa cobertura! Pronto para gerar.</div>`}
+  ${(()=>{
+    const vl=runValidations();
+    const errs=vl.filter(x=>x.level==='error');
+    const wrns=vl.filter(x=>x.level==='warn');
+    let out='';
+    if(errs.length) out+=`<div class="warn" style="border-color:var(--r);color:var(--r);background:rgba(255,68,68,.04)"><strong>✗ ${errs.length} erro(s) encontrado(s):</strong><br>${errs.map(x=>`✗ ${x.msg} — <a href="#" onclick="go(${x.step});return false;" style="color:var(--r);text-decoration:underline">ir para etapa</a>`).join('<br>')}</div>`;
+    if(wrns.length) out+=`<div class="warn"><strong>⚠ ${wrns.length} aviso(s):</strong><br>${wrns.map(x=>`⚠ ${x.msg} — <a href="#" onclick="go(${x.step});return false;" style="color:var(--a);text-decoration:underline">ir para etapa</a>`).join('<br>')}</div>`;
+    if(!vl.length) out+=`<div class="info">✅ Especificação consistente — pronto para gerar</div>`;
+    return out;
+  })()}
+  ${w.length?`<div class="warn">⚠ ${w.length} campo(s) importante(s) vazio(s):<br>${w.map(x=>`• ${x}`).join('<br>')}<br><br>Pode gerar mesmo assim. O time completa os [NEEDS CLARIFICATION].</div>`:''}
   <div class="rv"><h3>◈ Projeto</h3>${rr('Nome',S.meta.name)}${rr('Tipo',S.meta.type)}${rr('Estágio',S.meta.stage)}${rr('Pitch',S.meta.pitch)}</div>
   <div class="rv"><h3>◈ Problema & Usuários</h3>${rr('Problema',S.domain.problem?S.domain.problem.substring(0,80)+'…':'')}${rr('Perfis',S.domain.stakeholders.length+' perfis')}${rr('Funcionalidades',S.domain.useCases.length+' cadastradas')}</div>
   <div class="rv"><h3>◈ Tecnologia & Plano</h3>${rr('Arquitetura',S.arch.style)}${rr('Fases',S.plan.phases.length+' fases')}${rr('Agentes',S.agents.list.length+' configurados')}${rr('Segurança',S.quality.secChecks.length+' requisitos marcados')}${rr('Git',S.meta.useGit===true?'✅ Git Master ativo':S.meta.useGit===false?'⬜ Sem versionamento Git':'⚠ Não definido')}</div>
@@ -911,6 +929,34 @@ function warns(){
   if(!S.arch.style)     w.push('Estilo de arquitetura');
   if(!S.plan.phases.length) w.push('Fases de entrega');
   return w;
+}
+
+// ── FASE 3: VALIDAÇÕES INTELIGENTES ──────────────────────────
+function runValidations(){
+  const v=[];
+  // ERROS
+  if(!S.meta.name)            v.push({level:'error',msg:'Projeto sem nome definido',step:0});
+  if(!S.meta.type)            v.push({level:'error',msg:'Tipo de sistema não selecionado',step:0});
+  if(!S.domain.problem)       v.push({level:'error',msg:'Problema do usuário não descrito — o SPEC.md ficará vazio',step:1});
+  if(!S.plan.phases.length)   v.push({level:'error',msg:'Nenhuma fase de entrega definida — o PLAN.md não terá roadmap',step:4});
+  // AVISOS
+  if(S.arch.style==='microsservicos'&&!S.arch.messaging.length)
+    v.push({level:'warn',msg:'Microsserviços sem mensageria (Redis/RabbitMQ) — como os serviços vão se comunicar?',step:2});
+  if((S.quality.testTools.includes('Playwright')||S.quality.testTypes.includes('E2E'))&&!S.quality.envs.length)
+    v.push({level:'warn',msg:'Testes E2E definidos mas nenhum ambiente (staging/prod) foi especificado',step:3});
+  if(S.meta.useGit===true&&!S.quality.testTools.length)
+    v.push({level:'warn',msg:'Git Master ativo mas nenhuma ferramenta de teste foi definida — o fluxo de aprovação ficará incompleto',step:3});
+  if(S.arch.style==='microsservicos'&&S.arch.databases.length<=1)
+    v.push({level:'warn',msg:'Microsserviços tipicamente usam um banco por serviço — considere revisar',step:2});
+  if(!S.domain.useCases.length)
+    v.push({level:'warn',msg:'Nenhum caso de uso definido — os agentes terão dificuldade para entender o escopo',step:1});
+  if(!S.quality.secChecks.length)
+    v.push({level:'warn',msg:'Nenhum requisito de segurança marcado — o SECURITY.md será gerado sem regras',step:3});
+  if(S.arch.integrations&&S.arch.integrations.length>0&&!S.domain.nonGoals.length)
+    v.push({level:'warn',msg:'Há integrações externas mas nenhum "não-escopo" definido — risco de scope creep',step:1});
+  if(S.meta.useGit===null)
+    v.push({level:'warn',msg:'Você não respondeu se o projeto usa Git (Etapa 0)',step:0});
+  return v;
 }
 
 // ── SECURITY HELPERS ─────────────────────────────────────────
