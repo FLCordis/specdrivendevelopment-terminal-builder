@@ -182,6 +182,26 @@ function init(){
   checkMobile();
   render();
   registerSW();
+  setAI('ready','AI READY');
+}
+
+// AI status (header LED + bottom aibar). state: 'ready'|'thinking'|'synced'|'error'
+function setAI(state,label){
+  state=state||'ready';
+  const def={ready:'AI READY',thinking:'THINKING…',synced:'SYNCED',error:'ERROR'};
+  const txt=label||def[state]||'AI READY';
+  const h=document.getElementById('ai-status');
+  const hl=document.getElementById('ai-status-label');
+  if(h){h.setAttribute('data-state',state)}
+  if(hl){hl.textContent=state==='ready'?'READY':txt.toUpperCase()}
+  const b=document.getElementById('aibar-status');
+  const bl=document.getElementById('aibar-label');
+  if(b){b.setAttribute('data-state',state)}
+  if(bl){bl.textContent=txt.toUpperCase()}
+  if(setAI._t){clearTimeout(setAI._t);setAI._t=null}
+  if(state==='synced'){
+    setAI._t=setTimeout(()=>setAI('ready'),1400);
+  }
 }
 
 function registerSW(){
@@ -207,8 +227,9 @@ function setUseGit(val){
 }
 
 function copyLink(){
+  setAI('thinking','ENCODING');
   stateToHash();
-  navigator.clipboard.writeText(window.location.href).then(()=>toast('Link copiado!'));
+  navigator.clipboard.writeText(window.location.href).then(()=>{toast('Link copiado!');setAI('synced','SYNCED')}).catch(()=>setAI('error','ERROR'));
 }
 
 function renderFooter(){
@@ -909,23 +930,27 @@ function exportJSON(){
 
 async function downloadZip(){
   if(typeof JSZip==='undefined'){toast('JSZip ainda carregando — tente em 2s',1);return;}
-  const manifest=getManifest();
-  const zip=new JSZip();
-  for(const entry of manifest){
-    const content=entry.gen();
-    if(!content) continue;
-    // JSZip cria docs/ e agents/ automaticamente a partir do path
-    zip.file(entry.path,content);
-  }
-  zip.file('spec.json',JSON.stringify(S,null,2));
-  const blob=await zip.generateAsync({type:'blob'});
-  const nm=(S.meta.name||'projeto').replace(/\s+/g,'-').toLowerCase();
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`${nm}-sdd.zip`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
-  toast('Pacote .zip baixado!');
+  setAI('thinking','PACKING');
+  try{
+    const manifest=getManifest();
+    const zip=new JSZip();
+    for(const entry of manifest){
+      const content=entry.gen();
+      if(!content) continue;
+      // JSZip cria docs/ e agents/ automaticamente a partir do path
+      zip.file(entry.path,content);
+    }
+    zip.file('spec.json',JSON.stringify(S,null,2));
+    const blob=await zip.generateAsync({type:'blob'});
+    const nm=(S.meta.name||'projeto').replace(/\s+/g,'-').toLowerCase();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`${nm}-sdd.zip`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    toast('Pacote .zip baixado!');
+    setAI('synced','SYNCED');
+  }catch(err){setAI('error','ERROR');throw err}
 }
 function importJSON(ev){
   const f=ev.target.files[0]; if(!f) return;

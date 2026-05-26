@@ -32,8 +32,19 @@
 <div id="app">
 <header id="hdr">
   <div id="hdr-title">
-    <div class="hdr-sub">FLCORDIS // SDD STUDIO v3.0</div>
-    <h1>⬛ <span class="cur"></span>SDD TERMINAL</h1>
+    <svg id="hdr-chip" viewBox="0 0 8 8" aria-hidden="true" width="22" height="22">
+      <rect x="1" y="1" width="6" height="6" fill="#5c2f05" stroke="#ff8c1a" stroke-width=".4"/>
+      <rect x="2" y="2" width="4" height="4" fill="#ff8c1a"/>
+      <rect x="3" y="3" width="2" height="2" fill="#ffcc33"/>
+      <rect x="0" y="2" width="1" height="1" fill="#ff8c1a"/><rect x="0" y="4" width="1" height="1" fill="#ff8c1a"/>
+      <rect x="7" y="2" width="1" height="1" fill="#ff8c1a"/><rect x="7" y="4" width="1" height="1" fill="#ff8c1a"/>
+      <rect x="2" y="0" width="1" height="1" fill="#ff8c1a"/><rect x="4" y="0" width="1" height="1" fill="#ff8c1a"/>
+      <rect x="2" y="7" width="1" height="1" fill="#ff8c1a"/><rect x="4" y="7" width="1" height="1" fill="#ff8c1a"/>
+    </svg>
+    <div>
+      <h1>SDD TERMINAL</h1>
+      <div class="hdr-sub">NEURAL CODE FORGE · v1</div>
+    </div>
   </div>
   <div class="hdr-mid">
     <button id="btn-menu" onclick="openDrawer()" style="display:none;background:transparent;border:1px solid var(--bd);color:var(--g);font-family:var(--f);font-size:15px;height:30px;padding:0 10px;cursor:pointer;font-weight:700">☰</button>
@@ -44,6 +55,7 @@
     </div>
   </div>
   <div class="hdr-r">
+    <div class="ai-status" id="ai-status" data-state="ready"><span class="led"></span><span class="ai-status-label" id="ai-status-label">READY</span></div>
     <span style="font-size:11px;color:var(--gd);white-space:nowrap;font-weight:600"><span id="pct-label">SCORE:</span> <span id="pct-val">0/100</span></span>
   </div>
 </header>
@@ -60,7 +72,18 @@
   <div class="sb-footer" id="sb-footer"></div>
 </nav>
 
-<main id="main"><div id="sc"></div></main>
+<main id="main">
+  <div id="sc"></div>
+  <div id="aibar">
+    <span class="ai-status" id="aibar-status" data-state="ready"><span class="led"></span><span id="aibar-label">AI READY</span></span>
+    <span class="aibar-sep">·</span>
+    <span id="aibar-phase">phase 0/9</span>
+    <span class="aibar-sep">·</span>
+    <span id="aibar-pct">0%</span>
+    <span class="aibar-sep">·</span>
+    <span id="aibar-save">auto-save idle</span>
+  </div>
+</main>
 
 <aside id="pv" onclick="if(pvCollapsed) togglePV()">
   <div class="pv-header">
