@@ -6,6 +6,7 @@
 <title>Spec-Driven Development Terminal - Flavio Cordis</title>
 <link rel="stylesheet" href="style.css">
 <script defer src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body class="beginner">
 
@@ -70,6 +71,7 @@
   <div class="pvbar">
     <button class="btn btn-sm" onclick="copyOne()">⎘ Copiar este</button>
     <button class="btn btn-sm" onclick="copyAll()">⎘ Copiar tudo</button>
+    <button class="btn btn-sm btn-p" onclick="downloadZip()">📦 ZIP</button>
   </div>
 </aside>
 </div>
@@ -92,6 +94,7 @@
     <div style="display:flex;gap:7px;align-items:center">
       <button class="btn btn-sm" onclick="copyOne2()">⎘ Copiar</button>
       <button class="btn btn-sm" onclick="copyAll()">⎘ Tudo</button>
+      <button class="btn btn-sm btn-p" onclick="downloadZip()">📦 ZIP</button>
       <button class="btn btn-sm btn-d" onclick="closePVOverlay()">✕</button>
     </div>
   </div>

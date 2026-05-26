@@ -195,6 +195,10 @@ function renderFooter(){
       <span class="sb-btn-icon">📋</span>
       <span class="sb-btn-text"><strong>Para o Time</strong><small>Prompt pronto para o dev</small></span>
     </button>
+    <button class="sb-btn btn-p" onclick="downloadZip()">
+      <span class="sb-btn-icon">📦</span>
+      <span class="sb-btn-text"><strong>Baixar Pacote (.zip)</strong><small>Todos os arquivos em um ZIP</small></span>
+    </button>
     <button class="sb-btn" onclick="copyLink()">
       <span class="sb-btn-icon">🔗</span>
       <span class="sb-btn-text"><strong>Copiar Link</strong><small>Compartilha projeto via URL</small></span>
@@ -861,6 +865,33 @@ function exportJSON(){
   const nm=(S.meta.name||'projeto').replace(/\s+/g,'-').toLowerCase();
   const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`${nm}-spec.json`; a.click();
+}
+
+// Map preview-tab labels to actual repo paths inside the ZIP
+function zipPathFor(label){
+  if(label==='PR Template') return '.github/pull_request_template.md';
+  return label;
+}
+
+async function downloadZip(){
+  if(typeof JSZip==='undefined'){toast('JSZip ainda carregando — tente em 2s',1);return;}
+  const gens=getActiveGens();
+  const files=getActiveFiles();
+  const zip=new JSZip();
+  for(let i=0;i<files.length;i++){
+    const content=gens[i]();
+    if(!content) continue;
+    zip.file(zipPathFor(files[i]),content);
+  }
+  zip.file('spec.json',JSON.stringify(S,null,2));
+  const blob=await zip.generateAsync({type:'blob'});
+  const nm=(S.meta.name||'projeto').replace(/\s+/g,'-').toLowerCase();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${nm}-sdd.zip`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  toast('Pacote .zip baixado!');
 }
 function importJSON(ev){
   const f=ev.target.files[0]; if(!f) return;
