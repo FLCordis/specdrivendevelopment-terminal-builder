@@ -314,10 +314,6 @@ function copyLink(){
 
 function renderFooter(){
   const html=`
-    <button class="sb-btn btn-p" onclick="generateAll()">
-      <span class="sb-btn-icon">⚡</span>
-      <span class="sb-btn-text"><strong>Gerar Arquivos</strong><small>Cria CLAUDE.md, SPEC.md e mais</small></span>
-    </button>
     <button class="sb-btn" onclick="openTemplateModal()">
       <span class="sb-btn-icon">📁</span>
       <span class="sb-btn-text"><strong>Templates</strong><small>Comece com um projeto pré-preenchido</small></span>
@@ -333,6 +329,10 @@ function renderFooter(){
     <button class="sb-btn" onclick="copyLink()">
       <span class="sb-btn-icon">🔗</span>
       <span class="sb-btn-text"><strong>Copiar Link</strong><small>Compartilha projeto via URL</small></span>
+    </button>
+    <button class="sb-btn" onclick="openSessionModal()">
+      <span class="sb-btn-icon">💾</span>
+      <span class="sb-btn-text"><strong>Salvar / Carregar</strong><small>Exporta ou importa JSON</small></span>
     </button>
     <button class="sb-btn" style="border-color:var(--r);color:var(--r)" onclick="clearAll()">
       <span class="sb-btn-icon">⊘</span>
@@ -491,6 +491,7 @@ function sMeta(){
     ${transl('Se não sabe, escolha "Deixo o time decidir".')}
     <select onchange="u('meta.type',this.value)">${opts([['','-- Escolha --'],['app-web','Site ou aplicativo web'],['api-rest','Serviço de dados / API'],['monolito','Sistema web completo'],['microsservicos','Vários serviços separados'],['automacao','Automação de processo'],['cli','Ferramenta de terminal'],['decide-time','Deixo o time técnico decidir']],m.type)}</select></div>
     <div class="fg"><label>${optLabel('Em que fase?')}</label>
+    ${transl('Em qual momento do ciclo de vida está o projeto.')}
     <select onchange="u('meta.stage',this.value)">${opts([['','-- Escolha --'],['poc','Testando a ideia (PoC)'],['mvp','Primeira versão (MVP)'],['producao','Já em uso'],['refatoracao','Melhorando algo'],['modulo','Novo módulo']],m.stage)}</select></div>
   </div>
   <div class="fg"><label>O projeto será versionado com Git?</label>
@@ -1006,6 +1007,46 @@ function togglePV(){
   document.getElementById('app').style.gridTemplateColumns=pvCollapsed?'230px 1fr 32px':'230px 1fr 420px';
   document.getElementById('pv').setAttribute('data-collapsed',pvCollapsed);
   document.getElementById('pv-toggle-btn').textContent=pvCollapsed?'›':'‹';
+}
+function openSessionModal(){
+  document.getElementById('session-modal').style.display='flex';
+}
+function closeSessionModal(){
+  document.getElementById('session-modal').style.display='none';
+}
+function exportJSON(){
+  const data=JSON.stringify(S,null,2);
+  const name=(S.meta.name||'projeto').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`sdd-${name}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Projeto exportado!');
+  setAI('synced','SAVED');
+}
+function importJSON(ev){
+  const file=ev.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const parsed=JSON.parse(e.target.result);
+      if(!parsed.meta||!parsed.domain) throw new Error('Arquivo inválido');
+      Object.assign(S,parsed);
+      render(); schedPV();
+      scheduleSave();
+      closeSessionModal();
+      toast('Projeto carregado!');
+      setAI('synced','LOADED');
+    }catch{
+      toast('Erro: arquivo JSON inválido',1);
+      setAI('error','ERROR');
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value='';
 }
 function clearAll(){
   if(!confirm('Tem certeza? Todo o progresso será perdido e não pode ser desfeito.')) return;

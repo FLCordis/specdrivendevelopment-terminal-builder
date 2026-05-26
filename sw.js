@@ -1,7 +1,7 @@
 // SDD Terminal — Service Worker (cache-first com versionamento)
 // Para invalidar o cache após mudanças nos assets, incremente CACHE_VERSION.
 
-const CACHE_VERSION = 'sdd-v8';
+const CACHE_VERSION = 'sdd-v12';
 
 const ASSETS = [
   './',
@@ -12,6 +12,8 @@ const ASSETS = [
   './icon.svg',
   'https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js',
   'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+  // Google Fonts CSS — woff2 são cacheados oportunisticamente no fetch handler
+  'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Press+Start+2P&display=swap',
 ];
 
 self.addEventListener('install', (event) => {

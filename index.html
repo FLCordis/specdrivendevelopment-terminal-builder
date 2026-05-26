@@ -157,6 +157,23 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="session-modal" style="display:none" onclick="if(event.target===this)closeSessionModal()">
+  <div class="modal" style="max-width:480px">
+    <h3>💾 Salvar / Carregar Projeto</h3>
+    <p style="color:var(--mu);font-size:13px;margin-bottom:16px;line-height:1.7">Exporte o estado completo como JSON para backup ou para continuar em outro dispositivo.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-p" style="height:44px;font-size:13px" onclick="exportJSON()">⬇ Exportar projeto (.json)</button>
+      <label class="btn btn-a" style="height:44px;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+        ⬆ Importar projeto (.json)
+        <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+      </label>
+    </div>
+    <div class="modal-footer" style="margin-top:16px">
+      <button class="btn" onclick="closeSessionModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <script defer src="app.js"></script>
 </body>
 </html>
