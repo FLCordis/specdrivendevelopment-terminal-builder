@@ -3,15 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#00ff41">
+<meta name="theme-color" content="#ff8c1a">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <title>Spec-Driven Development Terminal - Flavio Cordis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Press+Start+2P&display=swap">
 <link rel="stylesheet" href="style.css">
 <script defer src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body class="beginner">
+
+<div id="boot" hidden><pre id="boot-out" aria-live="polite"></pre><div id="boot-skip">click or press any key to skip</div></div>
 
 <div id="drawer-overlay" onclick="closeDrawer()"></div>
 <div id="drawer">
@@ -29,8 +34,19 @@
 <div id="app">
 <header id="hdr">
   <div id="hdr-title">
-    <div class="hdr-sub">FLCORDIS // SDD STUDIO v3.0</div>
-    <h1>⬛ <span class="cur"></span>SDD TERMINAL</h1>
+    <svg id="hdr-chip" viewBox="0 0 8 8" aria-hidden="true" width="22" height="22">
+      <rect x="1" y="1" width="6" height="6" fill="#5c2f05" stroke="#ff8c1a" stroke-width=".4"/>
+      <rect x="2" y="2" width="4" height="4" fill="#ff8c1a"/>
+      <rect x="3" y="3" width="2" height="2" fill="#ffcc33"/>
+      <rect x="0" y="2" width="1" height="1" fill="#ff8c1a"/><rect x="0" y="4" width="1" height="1" fill="#ff8c1a"/>
+      <rect x="7" y="2" width="1" height="1" fill="#ff8c1a"/><rect x="7" y="4" width="1" height="1" fill="#ff8c1a"/>
+      <rect x="2" y="0" width="1" height="1" fill="#ff8c1a"/><rect x="4" y="0" width="1" height="1" fill="#ff8c1a"/>
+      <rect x="2" y="7" width="1" height="1" fill="#ff8c1a"/><rect x="4" y="7" width="1" height="1" fill="#ff8c1a"/>
+    </svg>
+    <div>
+      <h1>SDD TERMINAL</h1>
+      <div class="hdr-sub">NEURAL CODE FORGE · v1</div>
+    </div>
   </div>
   <div class="hdr-mid">
     <button id="btn-menu" onclick="openDrawer()" style="display:none;background:transparent;border:1px solid var(--bd);color:var(--g);font-family:var(--f);font-size:15px;height:30px;padding:0 10px;cursor:pointer;font-weight:700">☰</button>
@@ -41,6 +57,7 @@
     </div>
   </div>
   <div class="hdr-r">
+    <div class="ai-status" id="ai-status" data-state="ready"><span class="led"></span><span class="ai-status-label" id="ai-status-label">READY</span></div>
     <span style="font-size:11px;color:var(--gd);white-space:nowrap;font-weight:600"><span id="pct-label">SCORE:</span> <span id="pct-val">0/100</span></span>
   </div>
 </header>
@@ -57,7 +74,18 @@
   <div class="sb-footer" id="sb-footer"></div>
 </nav>
 
-<main id="main"><div id="sc"></div></main>
+<main id="main">
+  <div id="sc"></div>
+  <div id="aibar">
+    <span class="ai-status" id="aibar-status" data-state="ready"><span class="led"></span><span id="aibar-label">AI READY</span></span>
+    <span class="aibar-sep">·</span>
+    <span id="aibar-phase">phase 0/9</span>
+    <span class="aibar-sep">·</span>
+    <span id="aibar-pct">0%</span>
+    <span class="aibar-sep">·</span>
+    <span id="aibar-save">auto-save idle</span>
+  </div>
+</main>
 
 <aside id="pv" onclick="if(pvCollapsed) togglePV()">
   <div class="pv-header">
@@ -125,6 +153,23 @@
     <div class="modal-footer">
       <button class="btn btn-p" onclick="copyTeamPrompt()">⎘ Copiar prompt</button>
       <button class="btn" onclick="closeTeamModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="session-modal" style="display:none" onclick="if(event.target===this)closeSessionModal()">
+  <div class="modal" style="max-width:480px">
+    <h3>💾 Salvar / Carregar Projeto</h3>
+    <p style="color:var(--mu);font-size:13px;margin-bottom:16px;line-height:1.7">Exporte o estado completo como JSON para backup ou para continuar em outro dispositivo.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-p" style="height:44px;font-size:13px" onclick="exportJSON()">⬇ Exportar projeto (.json)</button>
+      <label class="btn btn-a" style="height:44px;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+        ⬆ Importar projeto (.json)
+        <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+      </label>
+    </div>
+    <div class="modal-footer" style="margin-top:16px">
+      <button class="btn" onclick="closeSessionModal()">Fechar</button>
     </div>
   </div>
 </div>

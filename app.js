@@ -45,16 +45,42 @@ let S={
   cmds:{list:[]}
 };
 
+// Pixel-art sprites 8x8 (X=laranja, Y=dourado, .=transparente) — renderizam via _avSVG()
+const AGENT_SPRITES={
+  orchestrator:['...YY...','..YXXY..','.YXXXXY.','YXXYYXXY','YXXYYXXY','.YXXXXY.','..YXXY..','...YY...'],
+  architect   :['...XX...','..XYYX..','..XYYX..','.XYYYYX.','.XYYYYX.','XXYYYYXX','XYYYYYYX','XXXXXXXX'],
+  backend     :['XXXXXXXX','XYYYYYYX','XXXXXXXX','........','XXXXXXXX','XYYYYYYX','XXXXXXXX','........'],
+  frontend    :['XXXXXXXX','XYYYYYYX','XYYYYYYX','XYYYYYYX','XXXXXXXX','...XX...','...XX...','.XXXXXX.'],
+  qa          :['........','.......X','......XX','X....XYX','XX..XYY.','.XXXYY..','..XXY...','...X....'],
+  devops      :['...XX...','.X.XX.X.','XXXXXXXX','.XXYYXX.','.XXYYXX.','XXXXXXXX','.X.XX.X.','...XX...'],
+  dba         :['.XXXXXX.','XYYYYYYX','XXXXXXXX','X......X','X......X','XXXXXXXX','XYYYYYYX','.XXXXXX.'],
+  reviewer    :['..XXXX..','.XYYYYX.','XYYYYYYX','XYYXXYYX','XYXXXXYX','XYYYYYYX','.XYYYYX.','..XXXX..'],
+  git         :['X......X','XX....XX','.X....X.','.XX..XX.','..X..X..','..XXXX..','...XX...','...XX...'],
+  generic     :['XXXXXXXX','X......X','X.YYYY.X','X.YXXY.X','X.YXXY.X','X.YYYY.X','X......X','XXXXXXXX']
+};
+function _avSVG(rows){
+  if(!rows||!rows.length) return '';
+  let r='';
+  for(let y=0;y<rows.length;y++){const row=rows[y];for(let x=0;x<row.length;x++){const c=row[x];if(c==='X')r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#ff8c1a"/>`;else if(c==='Y')r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#ffcc33"/>`;}}
+  return `<svg viewBox="0 0 8 8" width="24" height="24" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+function agentAvatar(ag){
+  const key=ag&&ag.icon;
+  const rows=(key&&AGENT_SPRITES[key])||null;
+  if(rows) return _avSVG(rows);
+  return '<span class="agent-avatar-fallback">▣</span>';
+}
+
 const DEF_AGENTS=[
-  {name:'Orquestrador / Team Lead',resp:'Lê CLAUDE.md, SPEC.md, PLAN.md e RULES.md antes de tudo. Decide qual agente especialista acionar e garante conformidade com regras, escopo e segurança.',arts:'CLAUDE.md, SPEC.md, PLAN.md, RULES.md, SECURITY.md',style:'Explica o que vai fazer, qual agente acionou e por quê. Faz checagem final antes de entregar.',implicit:true},
-  {name:'Arquiteto',resp:'Define e valida a arquitetura, revisa SPEC e PLAN. Aplica SOLID, KISS, DRY. Questiona complexidade desnecessária.',arts:'SPEC.md, PLAN.md, RULES.md, SECURITY.md',style:'Explica trade-offs, alerta sobre over-engineering, propõe a solução mais simples que funciona'},
-  {name:'Backend',resp:'Implementa APIs, regras de negócio e integrações. Segue clean code, SOLID e as regras de segurança do SECURITY.md.',arts:'SPEC.md, RULES.md, PLAN.md, SECURITY.md',style:'Código limpo, testável, seguro. Explica decisões. Propõe testes junto com a implementação'},
-  {name:'Frontend',resp:'Implementa telas, componentes e fluxos de UI com foco em UX, performance e acessibilidade.',arts:'SPEC.md, RULES.md, SECURITY.md',style:'Foca em UX, acessibilidade, lazy loading e boas práticas de segurança frontend'},
-  {name:'QA',resp:'Cria e revisa testes, valida critérios de entrega, verifica edge cases e cobertura.',arts:'SPEC.md, PLAN.md, RULES.md',style:'Focado em cobertura, edge cases, testes de regressão e automação'},
-  {name:'DevOps',resp:'Configura CI/CD, ambientes, monitoramento, escalabilidade e infraestrutura.',arts:'HOOKS.md, RULES.md, SECURITY.md',style:'Focado em automação, segurança de infra, observabilidade e zero-downtime deploy'},
-  {name:'DBA (Banco de Dados)',resp:'Modela o banco, define índices, constraints, relacionamentos e estratégia de queries. Previne N+1, otimiza performance e define estratégia de cache e paginação.',arts:'SPEC.md, RULES.md, PLAN.md',style:'Focado em modelagem correta, performance de queries, integridade de dados e escalabilidade do banco'},
-  {name:'Code Reviewer',resp:'Revisão obrigatória após qualquer /implementar. Analisa qualidade, segurança, performance, manutenibilidade e conformidade com SPEC, RULES e SECURITY. Bloqueia merge se encontrar problemas críticos.',arts:'SPEC.md, RULES.md, SECURITY.md, PLAN.md',style:'Criterioso e objetivo. Aponta problemas com severidade (Crítico/Alto/Médio/Baixo), explica o motivo e sugere a correção exata. Nunca aprova código com issue Crítico ou Alto sem resolução.'},
-  {name:'Git Master',resp:'Responsável exclusivo por commits, branches e PRs. NUNCA é chamado diretamente — só pode ser acionado pelo Orquestrador após o Code Reviewer emitir aprovação explícita (sem issues Crítico/Alto + todos os testes passando).',arts:'SPEC.md, PLAN.md, RULES.md',style:'Segue Conventional Commits. Referencia sempre a fase do PLAN.md no commit. Nunca sobe código quebrado.',implicit:true,gitOnly:true},
+  {name:'Orquestrador / Team Lead',icon:'orchestrator',resp:'Lê CLAUDE.md, SPEC.md, PLAN.md e RULES.md antes de tudo. Decide qual agente especialista acionar e garante conformidade com regras, escopo e segurança.',arts:'CLAUDE.md, SPEC.md, PLAN.md, RULES.md, SECURITY.md',style:'Explica o que vai fazer, qual agente acionou e por quê. Faz checagem final antes de entregar.',implicit:true},
+  {name:'Arquiteto',icon:'architect',resp:'Define e valida a arquitetura, revisa SPEC e PLAN. Aplica SOLID, KISS, DRY. Questiona complexidade desnecessária.',arts:'SPEC.md, PLAN.md, RULES.md, SECURITY.md',style:'Explica trade-offs, alerta sobre over-engineering, propõe a solução mais simples que funciona'},
+  {name:'Backend',icon:'backend',resp:'Implementa APIs, regras de negócio e integrações. Segue clean code, SOLID e as regras de segurança do SECURITY.md.',arts:'SPEC.md, RULES.md, PLAN.md, SECURITY.md',style:'Código limpo, testável, seguro. Explica decisões. Propõe testes junto com a implementação'},
+  {name:'Frontend',icon:'frontend',resp:'Implementa telas, componentes e fluxos de UI com foco em UX, performance e acessibilidade.',arts:'SPEC.md, RULES.md, SECURITY.md',style:'Foca em UX, acessibilidade, lazy loading e boas práticas de segurança frontend'},
+  {name:'QA',icon:'qa',resp:'Cria e revisa testes, valida critérios de entrega, verifica edge cases e cobertura.',arts:'SPEC.md, PLAN.md, RULES.md',style:'Focado em cobertura, edge cases, testes de regressão e automação'},
+  {name:'DevOps',icon:'devops',resp:'Configura CI/CD, ambientes, monitoramento, escalabilidade e infraestrutura.',arts:'HOOKS.md, RULES.md, SECURITY.md',style:'Focado em automação, segurança de infra, observabilidade e zero-downtime deploy'},
+  {name:'DBA (Banco de Dados)',icon:'dba',resp:'Modela o banco, define índices, constraints, relacionamentos e estratégia de queries. Previne N+1, otimiza performance e define estratégia de cache e paginação.',arts:'SPEC.md, RULES.md, PLAN.md',style:'Focado em modelagem correta, performance de queries, integridade de dados e escalabilidade do banco'},
+  {name:'Code Reviewer',icon:'reviewer',resp:'Revisão obrigatória após qualquer /implementar. Analisa qualidade, segurança, performance, manutenibilidade e conformidade com SPEC, RULES e SECURITY. Bloqueia merge se encontrar problemas críticos.',arts:'SPEC.md, RULES.md, SECURITY.md, PLAN.md',style:'Criterioso e objetivo. Aponta problemas com severidade (Crítico/Alto/Médio/Baixo), explica o motivo e sugere a correção exata. Nunca aprova código com issue Crítico ou Alto sem resolução.'},
+  {name:'Git Master',icon:'git',resp:'Responsável exclusivo por commits, branches e PRs. NUNCA é chamado diretamente — só pode ser acionado pelo Orquestrador após o Code Reviewer emitir aprovação explícita (sem issues Crítico/Alto + todos os testes passando).',arts:'SPEC.md, PLAN.md, RULES.md',style:'Segue Conventional Commits. Referencia sempre a fase do PLAN.md no commit. Nunca sobe código quebrado.',implicit:true,gitOnly:true},
 ];
 
 const DEF_CMDS=[
@@ -180,8 +206,82 @@ function init(){
   }
   renderFooter();
   checkMobile();
+  bootSequence();
   render();
   registerSW();
+  setAI('ready','AI READY');
+}
+
+const BOOT_LINES=[
+  '╔════════════════════════════════════════╗',
+  '║  SDD BUILDER · APPLE ][ EDITION  v1.0  ║',
+  '╚════════════════════════════════════════╝',
+  '',
+  '> INITIALIZING NEURAL CORE.............. [OK]',
+  '> LOADING AGENT ROSTER................... [OK]',
+  '>   ├ orchestrator..................... ✓',
+  '>   ├ architect........................ ✓',
+  '>   ├ backend · frontend · qa.......... ✓',
+  '>   └ devops · dba · reviewer.......... ✓',
+  '> MOUNTING MEMORY (localStorage)....... [OK]',
+  '> READY_'
+];
+
+function bootSequence(){
+  let booted=false;
+  try{booted=localStorage.getItem('sdd.booted')==='1'}catch(_){}
+  if(booted) return;
+  try{if(window.matchMedia('(max-width: 479px)').matches){localStorage.setItem('sdd.booted','1');return;}}catch(_){}
+  const el=document.getElementById('boot');
+  const out=document.getElementById('boot-out');
+  if(!el||!out){console.warn('[bootSequence] #boot not found');return;}
+  el.removeAttribute('hidden');
+  el.hidden=false;
+  out.textContent='';
+  let li=0,ci=0,done=false;
+  const finish=()=>{
+    if(done) return; done=true;
+    try{localStorage.setItem('sdd.booted','1')}catch(_){}
+    el.classList.add('fade-out');
+    document.removeEventListener('click',skip);
+    document.removeEventListener('keydown',skip);
+    setTimeout(()=>{el.setAttribute('hidden','');el.classList.remove('fade-out')},260);
+  };
+  const skip=()=>finish();
+  document.addEventListener('click',skip);
+  document.addEventListener('keydown',skip);
+  const tick=()=>{
+    if(done) return;
+    if(li>=BOOT_LINES.length){setTimeout(finish,500);return;}
+    const line=BOOT_LINES[li];
+    if(ci<line.length){
+      out.textContent+=line.charAt(ci++);
+      setTimeout(tick,line.startsWith('>')?14:22);
+    } else {
+      out.textContent+='\n';li++;ci=0;
+      setTimeout(tick,line===''?80:140);
+    }
+  };
+  setTimeout(tick,120);
+}
+
+// AI status (header LED + bottom aibar). state: 'ready'|'thinking'|'synced'|'error'
+function setAI(state,label){
+  state=state||'ready';
+  const def={ready:'AI READY',thinking:'THINKING…',synced:'SYNCED',error:'ERROR'};
+  const txt=label||def[state]||'AI READY';
+  const h=document.getElementById('ai-status');
+  const hl=document.getElementById('ai-status-label');
+  if(h){h.setAttribute('data-state',state)}
+  if(hl){hl.textContent=state==='ready'?'READY':txt.toUpperCase()}
+  const b=document.getElementById('aibar-status');
+  const bl=document.getElementById('aibar-label');
+  if(b){b.setAttribute('data-state',state)}
+  if(bl){bl.textContent=txt.toUpperCase()}
+  if(setAI._t){clearTimeout(setAI._t);setAI._t=null}
+  if(state==='synced'){
+    setAI._t=setTimeout(()=>setAI('ready'),1400);
+  }
 }
 
 function registerSW(){
@@ -207,16 +307,13 @@ function setUseGit(val){
 }
 
 function copyLink(){
+  setAI('thinking','ENCODING');
   stateToHash();
-  navigator.clipboard.writeText(window.location.href).then(()=>toast('Link copiado!'));
+  navigator.clipboard.writeText(window.location.href).then(()=>{toast('Link copiado!');setAI('synced','SYNCED')}).catch(()=>setAI('error','ERROR'));
 }
 
 function renderFooter(){
   const html=`
-    <button class="sb-btn btn-p" onclick="generateAll()">
-      <span class="sb-btn-icon">⚡</span>
-      <span class="sb-btn-text"><strong>Gerar Arquivos</strong><small>Cria CLAUDE.md, SPEC.md e mais</small></span>
-    </button>
     <button class="sb-btn" onclick="openTemplateModal()">
       <span class="sb-btn-icon">📁</span>
       <span class="sb-btn-text"><strong>Templates</strong><small>Comece com um projeto pré-preenchido</small></span>
@@ -233,15 +330,10 @@ function renderFooter(){
       <span class="sb-btn-icon">🔗</span>
       <span class="sb-btn-text"><strong>Copiar Link</strong><small>Compartilha projeto via URL</small></span>
     </button>
-    <button class="sb-btn" onclick="exportJSON()">
-      <span class="sb-btn-icon">⬇</span>
-      <span class="sb-btn-text"><strong>Salvar JSON</strong><small>Exporta seu progresso</small></span>
+    <button class="sb-btn" onclick="openSessionModal()">
+      <span class="sb-btn-icon">💾</span>
+      <span class="sb-btn-text"><strong>Salvar / Carregar</strong><small>Exporta ou importa JSON</small></span>
     </button>
-    <label class="sb-btn" style="cursor:pointer">
-      <span class="sb-btn-icon">⬆</span>
-      <span class="sb-btn-text"><strong>Carregar JSON</strong><small>Retoma projeto salvo</small></span>
-      <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
-    </label>
     <button class="sb-btn" style="border-color:var(--r);color:var(--r)" onclick="clearAll()">
       <span class="sb-btn-icon">⊘</span>
       <span class="sb-btn-text"><strong>Limpar Tudo</strong><small>Reseta todo o progresso</small></span>
@@ -279,7 +371,7 @@ function renderPVOverlay(){
   document.getElementById('pvtabs2').innerHTML=files.map((f,i)=>
     `<div class="pvt${i===pvTab?' active':''}" title="${f}" onclick="switchPV2(${i})">${f}</div>`).join('');
   const md=(gens[pvTab]||(() => ''))();
-  document.getElementById('pvc2').innerHTML=`<pre>${hlNC(md)}</pre>`;
+  document.getElementById('pvc2').innerHTML=`<pre>${hl(md)}</pre>`;
 }
 function switchPV2(i){pvTab=i;renderPVOverlay();}
 function copyOne2(){navigator.clipboard.writeText(document.getElementById('pvc2').innerText).then(()=>toast('Copiado!'));}
@@ -399,6 +491,7 @@ function sMeta(){
     ${transl('Se não sabe, escolha "Deixo o time decidir".')}
     <select onchange="u('meta.type',this.value)">${opts([['','-- Escolha --'],['app-web','Site ou aplicativo web'],['api-rest','Serviço de dados / API'],['monolito','Sistema web completo'],['microsservicos','Vários serviços separados'],['automacao','Automação de processo'],['cli','Ferramenta de terminal'],['decide-time','Deixo o time técnico decidir']],m.type)}</select></div>
     <div class="fg"><label>${optLabel('Em que fase?')}</label>
+    ${transl('Em qual momento do ciclo de vida está o projeto.')}
     <select onchange="u('meta.stage',this.value)">${opts([['','-- Escolha --'],['poc','Testando a ideia (PoC)'],['mvp','Primeira versão (MVP)'],['producao','Já em uso'],['refatoracao','Melhorando algo'],['modulo','Novo módulo']],m.stage)}</select></div>
   </div>
   <div class="fg"><label>O projeto será versionado com Git?</label>
@@ -543,15 +636,37 @@ function sAgents(){
 }
 
 function agItem(ag,i){
-  return`<div class="li"><div class="lih"><span class="lit" style="${ag.implicit?'color:var(--g)':'color:var(--a)'}">${ag.implicit?'⊙ ':''}${e(ag.name||'Novo Agente')}</span>
-  <button class="btn btn-sm btn-d" onclick="remAg(${i})">✕</button></div>
-  ${ag.gitOnly?`<div class="info" style="margin-bottom:8px;font-size:12px">// Agente exclusivo de versionamento. Só é acionado pelo Orquestrador após aprovação do Code Reviewer e todos os testes passando.</div>`:ag.implicit?`<div class="info" style="margin-bottom:8px;font-size:12px">// Coordena todos os outros. Lê docs e decide qual especialista acionar — incluindo segurança e banco.</div>`:''}
-  <div class="g2">
-    <div class="fg"><label>Nome</label><input type="text" value="${e(ag.name||'')}" placeholder="Ex: DBA, Arquiteto" oninput="li('agents.list',${i},'name',this.value)"></div>
-    <div class="fg"><label>Arquivos que lê primeiro</label><input type="text" value="${e(ag.arts||'')}" placeholder="Ex: SPEC.md, RULES.md" oninput="li('agents.list',${i},'arts',this.value)"></div>
+  const cls=['agent-card'];
+  if(ag.implicit)cls.push('is-implicit');
+  if(ag.gitOnly)cls.push('is-git');
+  const tags=[];
+  if(ag.implicit)tags.push('<span class="agent-tag agent-tag-imp">CORE</span>');
+  if(ag.gitOnly)tags.push('<span class="agent-tag agent-tag-git">GIT</span>');
+  const note=ag.gitOnly
+    ? `<div class="agent-note">// Agente exclusivo de versionamento. Só é acionado pelo Orquestrador após aprovação do Code Reviewer e todos os testes passando.</div>`
+    : ag.implicit
+    ? `<div class="agent-note">// Coordena todos os outros. Lê docs e decide qual especialista acionar — incluindo segurança e banco.</div>`
+    : '';
+  return`<div class="${cls.join(' ')}">
+  <div class="agent-head">
+    <div class="agent-avatar">${agentAvatar(ag)}</div>
+    <div class="agent-meta">
+      <div class="agent-name">${e(ag.name||'NOVO AGENTE')}</div>
+      <div class="agent-tags">${tags.join('')}</div>
+    </div>
+    <div class="agent-status"><span class="agent-dot"></span>ONLINE</div>
+    <button class="btn btn-sm btn-d agent-rm" onclick="remAg(${i})" aria-label="Remover agente">✕</button>
   </div>
-  <div class="fg"><label>O que faz</label><input type="text" value="${e(ag.resp||'')}" placeholder="Ex: Modela o banco, define índices e previne N+1 queries" oninput="li('agents.list',${i},'resp',this.value)"></div>
-  <div class="fg advanced-only"><label>Como responde</label><input type="text" value="${e(ag.style||'')}" placeholder="Ex: Foca em performance, integridade e escalabilidade" oninput="li('agents.list',${i},'style',this.value)"></div></div>`;
+  ${note}
+  <div class="agent-body">
+    <div class="g2">
+      <div class="fg"><label>Nome</label><input type="text" value="${e(ag.name||'')}" placeholder="Ex: DBA, Arquiteto" oninput="li('agents.list',${i},'name',this.value)"></div>
+      <div class="fg"><label>Arquivos que lê primeiro</label><input type="text" value="${e(ag.arts||'')}" placeholder="Ex: SPEC.md, RULES.md" oninput="li('agents.list',${i},'arts',this.value)"></div>
+    </div>
+    <div class="fg"><label>O que faz</label><input type="text" value="${e(ag.resp||'')}" placeholder="Ex: Modela o banco, define índices e previne N+1 queries" oninput="li('agents.list',${i},'resp',this.value)"></div>
+    <div class="fg advanced-only"><label>Como responde</label><input type="text" value="${e(ag.style||'')}" placeholder="Ex: Foca em performance, integridade e escalabilidade" oninput="li('agents.list',${i},'style',this.value)"></div>
+  </div>
+</div>`;
 }
 
 function sRules(){
@@ -650,7 +765,6 @@ function sReview(){
   <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn btn-p" onclick="generateAll()" style="font-size:14px;padding:0 20px;height:38px">⚡ GERAR TODOS OS ARQUIVOS</button>
     <button class="btn btn-a" onclick="openTeamModal()">📋 Para o time técnico</button>
-    <button class="btn btn-sm" onclick="exportJSON()">⬇ Salvar JSON</button>
   </div>
   ${nav(true)}`;
 }
@@ -823,12 +937,22 @@ function schedPV(){
   clearTimeout(pvTimer); pvTimer=setTimeout(renderPV,400);
 }
 function hlNC(md){
-  return md.replace(/\[NEEDS CLARIFICATION[^\]]*\]/g,s=>`<span style="color:#ff5555;font-weight:bold">${s}</span>`);
+  return md.replace(/\[NEEDS CLARIFICATION[^\]]*\]/g,s=>`<span class="hl-nc">${s}</span>`);
+}
+// Syntax highlight discreto: escapa HTML primeiro, depois aplica spans semânticos.
+// Ordem: NC → tags XML escapadas → `code` inline → headings markdown.
+function hl(md){
+  let s=String(md==null?'':md).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s=s.replace(/\[NEEDS CLARIFICATION[^\]]*\]/g,m=>`<span class="hl-nc">${m}</span>`);
+  s=s.replace(/&lt;\/?[a-zA-Z][\w-]*(?:\s[^&]*?)?\/?&gt;/g,m=>`<span class="hl-xml">${m}</span>`);
+  s=s.replace(/`([^`\n]+)`/g,(m,c)=>`<span class="hl-code">\`${c}\`</span>`);
+  s=s.replace(/^(#{1,6}\s.*)$/gm,m=>`<span class="hl-h">${m}</span>`);
+  return s;
 }
 function renderPV(){
   const gens=getActiveGens();
   const md=(gens[pvTab]||(() => ''))();
-  document.getElementById('pvc').innerHTML=`<pre>${hlNC(md)}</pre>`;
+  document.getElementById('pvc').innerHTML=`<pre>${hl(md)}</pre>`;
 }
 function generateAll(){
   renderPV();
@@ -884,6 +1008,46 @@ function togglePV(){
   document.getElementById('pv').setAttribute('data-collapsed',pvCollapsed);
   document.getElementById('pv-toggle-btn').textContent=pvCollapsed?'›':'‹';
 }
+function openSessionModal(){
+  document.getElementById('session-modal').style.display='flex';
+}
+function closeSessionModal(){
+  document.getElementById('session-modal').style.display='none';
+}
+function exportJSON(){
+  const data=JSON.stringify(S,null,2);
+  const name=(S.meta.name||'projeto').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`sdd-${name}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Projeto exportado!');
+  setAI('synced','SAVED');
+}
+function importJSON(ev){
+  const file=ev.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const parsed=JSON.parse(e.target.result);
+      if(!parsed.meta||!parsed.domain) throw new Error('Arquivo inválido');
+      Object.assign(S,parsed);
+      render(); schedPV();
+      scheduleSave();
+      closeSessionModal();
+      toast('Projeto carregado!');
+      setAI('synced','LOADED');
+    }catch{
+      toast('Erro: arquivo JSON inválido',1);
+      setAI('error','ERROR');
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
 function clearAll(){
   if(!confirm('Tem certeza? Todo o progresso será perdido e não pode ser desfeito.')) return;
   S={
@@ -901,52 +1065,29 @@ function clearAll(){
   try{localStorage.removeItem(STORAGE_KEY);}catch(err){}
   toast('Projeto resetado');
 }
-function exportJSON(){
-  const nm=(S.meta.name||'projeto').replace(/\s+/g,'-').toLowerCase();
-  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`${nm}-spec.json`; a.click();
-}
-
 async function downloadZip(){
   if(typeof JSZip==='undefined'){toast('JSZip ainda carregando — tente em 2s',1);return;}
-  const manifest=getManifest();
-  const zip=new JSZip();
-  for(const entry of manifest){
-    const content=entry.gen();
-    if(!content) continue;
-    // JSZip cria docs/ e agents/ automaticamente a partir do path
-    zip.file(entry.path,content);
-  }
-  zip.file('spec.json',JSON.stringify(S,null,2));
-  const blob=await zip.generateAsync({type:'blob'});
-  const nm=(S.meta.name||'projeto').replace(/\s+/g,'-').toLowerCase();
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`${nm}-sdd.zip`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
-  toast('Pacote .zip baixado!');
-}
-function importJSON(ev){
-  const f=ev.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    try{
-      Object.assign(S,JSON.parse(e.target.result));
-      // Re-sync gitOnly items based on loaded useGit value
-      const gitAgent=DEF_AGENTS.find(a=>a.gitOnly);
-      const gitCmd=DEF_CMDS.find(c=>c.gitOnly);
-      S.agents.list=S.agents.list.filter(a=>!a.gitOnly);
-      S.cmds.list=S.cmds.list.filter(c=>!c.gitOnly);
-      if(S.meta.useGit===true){
-        if(gitAgent) S.agents.list.push({...gitAgent});
-        if(gitCmd) S.cmds.list.push({...gitCmd});
-      }
-      render();saveToLocalStorage();toast('Projeto carregado!');
+  setAI('thinking','PACKING');
+  try{
+    const manifest=getManifest();
+    const zip=new JSZip();
+    for(const entry of manifest){
+      const content=entry.gen();
+      if(!content) continue;
+      // JSZip cria docs/ e agents/ automaticamente a partir do path
+      zip.file(entry.path,content);
     }
-    catch{toast('Erro no arquivo JSON',1);}
-  };
-  r.readAsText(f);
+    zip.file('spec.json',JSON.stringify(S,null,2));
+    const blob=await zip.generateAsync({type:'blob'});
+    const nm=(S.meta.name||'projeto').replace(/\s+/g,'-').toLowerCase();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`${nm}-sdd.zip`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    toast('Pacote .zip baixado!');
+    setAI('synced','SYNCED');
+  }catch(err){setAI('error','ERROR');throw err}
 }
 function toast(msg,err=0){
   const old=document.querySelector('.toast'); if(old) old.remove();
