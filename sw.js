@@ -1,7 +1,7 @@
 // SDD Terminal — Service Worker (cache-first com versionamento)
 // Para invalidar o cache após mudanças nos assets, incremente CACHE_VERSION.
 
-const CACHE_VERSION = 'sdd-v7';
+const CACHE_VERSION = 'sdd-v8';
 
 const ASSETS = [
   './',
