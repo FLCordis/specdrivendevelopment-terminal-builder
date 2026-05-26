@@ -45,16 +45,42 @@ let S={
   cmds:{list:[]}
 };
 
+// Pixel-art sprites 8x8 (X=laranja, Y=dourado, .=transparente) — renderizam via _avSVG()
+const AGENT_SPRITES={
+  orchestrator:['...YY...','..YXXY..','.YXXXXY.','YXXYYXXY','YXXYYXXY','.YXXXXY.','..YXXY..','...YY...'],
+  architect   :['...XX...','..XYYX..','..XYYX..','.XYYYYX.','.XYYYYX.','XXYYYYXX','XYYYYYYX','XXXXXXXX'],
+  backend     :['XXXXXXXX','XYYYYYYX','XXXXXXXX','........','XXXXXXXX','XYYYYYYX','XXXXXXXX','........'],
+  frontend    :['XXXXXXXX','XYYYYYYX','XYYYYYYX','XYYYYYYX','XXXXXXXX','...XX...','...XX...','.XXXXXX.'],
+  qa          :['........','.......X','......XX','X....XYX','XX..XYY.','.XXXYY..','..XXY...','...X....'],
+  devops      :['...XX...','.X.XX.X.','XXXXXXXX','.XXYYXX.','.XXYYXX.','XXXXXXXX','.X.XX.X.','...XX...'],
+  dba         :['.XXXXXX.','XYYYYYYX','XXXXXXXX','X......X','X......X','XXXXXXXX','XYYYYYYX','.XXXXXX.'],
+  reviewer    :['..XXXX..','.XYYYYX.','XYYYYYYX','XYYXXYYX','XYXXXXYX','XYYYYYYX','.XYYYYX.','..XXXX..'],
+  git         :['X......X','XX....XX','.X....X.','.XX..XX.','..X..X..','..XXXX..','...XX...','...XX...'],
+  generic     :['XXXXXXXX','X......X','X.YYYY.X','X.YXXY.X','X.YXXY.X','X.YYYY.X','X......X','XXXXXXXX']
+};
+function _avSVG(rows){
+  if(!rows||!rows.length) return '';
+  let r='';
+  for(let y=0;y<rows.length;y++){const row=rows[y];for(let x=0;x<row.length;x++){const c=row[x];if(c==='X')r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#ff8c1a"/>`;else if(c==='Y')r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#ffcc33"/>`;}}
+  return `<svg viewBox="0 0 8 8" width="24" height="24" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+function agentAvatar(ag){
+  const key=ag&&ag.icon;
+  const rows=(key&&AGENT_SPRITES[key])||null;
+  if(rows) return _avSVG(rows);
+  return '<span class="agent-avatar-fallback">▣</span>';
+}
+
 const DEF_AGENTS=[
-  {name:'Orquestrador / Team Lead',resp:'Lê CLAUDE.md, SPEC.md, PLAN.md e RULES.md antes de tudo. Decide qual agente especialista acionar e garante conformidade com regras, escopo e segurança.',arts:'CLAUDE.md, SPEC.md, PLAN.md, RULES.md, SECURITY.md',style:'Explica o que vai fazer, qual agente acionou e por quê. Faz checagem final antes de entregar.',implicit:true},
-  {name:'Arquiteto',resp:'Define e valida a arquitetura, revisa SPEC e PLAN. Aplica SOLID, KISS, DRY. Questiona complexidade desnecessária.',arts:'SPEC.md, PLAN.md, RULES.md, SECURITY.md',style:'Explica trade-offs, alerta sobre over-engineering, propõe a solução mais simples que funciona'},
-  {name:'Backend',resp:'Implementa APIs, regras de negócio e integrações. Segue clean code, SOLID e as regras de segurança do SECURITY.md.',arts:'SPEC.md, RULES.md, PLAN.md, SECURITY.md',style:'Código limpo, testável, seguro. Explica decisões. Propõe testes junto com a implementação'},
-  {name:'Frontend',resp:'Implementa telas, componentes e fluxos de UI com foco em UX, performance e acessibilidade.',arts:'SPEC.md, RULES.md, SECURITY.md',style:'Foca em UX, acessibilidade, lazy loading e boas práticas de segurança frontend'},
-  {name:'QA',resp:'Cria e revisa testes, valida critérios de entrega, verifica edge cases e cobertura.',arts:'SPEC.md, PLAN.md, RULES.md',style:'Focado em cobertura, edge cases, testes de regressão e automação'},
-  {name:'DevOps',resp:'Configura CI/CD, ambientes, monitoramento, escalabilidade e infraestrutura.',arts:'HOOKS.md, RULES.md, SECURITY.md',style:'Focado em automação, segurança de infra, observabilidade e zero-downtime deploy'},
-  {name:'DBA (Banco de Dados)',resp:'Modela o banco, define índices, constraints, relacionamentos e estratégia de queries. Previne N+1, otimiza performance e define estratégia de cache e paginação.',arts:'SPEC.md, RULES.md, PLAN.md',style:'Focado em modelagem correta, performance de queries, integridade de dados e escalabilidade do banco'},
-  {name:'Code Reviewer',resp:'Revisão obrigatória após qualquer /implementar. Analisa qualidade, segurança, performance, manutenibilidade e conformidade com SPEC, RULES e SECURITY. Bloqueia merge se encontrar problemas críticos.',arts:'SPEC.md, RULES.md, SECURITY.md, PLAN.md',style:'Criterioso e objetivo. Aponta problemas com severidade (Crítico/Alto/Médio/Baixo), explica o motivo e sugere a correção exata. Nunca aprova código com issue Crítico ou Alto sem resolução.'},
-  {name:'Git Master',resp:'Responsável exclusivo por commits, branches e PRs. NUNCA é chamado diretamente — só pode ser acionado pelo Orquestrador após o Code Reviewer emitir aprovação explícita (sem issues Crítico/Alto + todos os testes passando).',arts:'SPEC.md, PLAN.md, RULES.md',style:'Segue Conventional Commits. Referencia sempre a fase do PLAN.md no commit. Nunca sobe código quebrado.',implicit:true,gitOnly:true},
+  {name:'Orquestrador / Team Lead',icon:'orchestrator',resp:'Lê CLAUDE.md, SPEC.md, PLAN.md e RULES.md antes de tudo. Decide qual agente especialista acionar e garante conformidade com regras, escopo e segurança.',arts:'CLAUDE.md, SPEC.md, PLAN.md, RULES.md, SECURITY.md',style:'Explica o que vai fazer, qual agente acionou e por quê. Faz checagem final antes de entregar.',implicit:true},
+  {name:'Arquiteto',icon:'architect',resp:'Define e valida a arquitetura, revisa SPEC e PLAN. Aplica SOLID, KISS, DRY. Questiona complexidade desnecessária.',arts:'SPEC.md, PLAN.md, RULES.md, SECURITY.md',style:'Explica trade-offs, alerta sobre over-engineering, propõe a solução mais simples que funciona'},
+  {name:'Backend',icon:'backend',resp:'Implementa APIs, regras de negócio e integrações. Segue clean code, SOLID e as regras de segurança do SECURITY.md.',arts:'SPEC.md, RULES.md, PLAN.md, SECURITY.md',style:'Código limpo, testável, seguro. Explica decisões. Propõe testes junto com a implementação'},
+  {name:'Frontend',icon:'frontend',resp:'Implementa telas, componentes e fluxos de UI com foco em UX, performance e acessibilidade.',arts:'SPEC.md, RULES.md, SECURITY.md',style:'Foca em UX, acessibilidade, lazy loading e boas práticas de segurança frontend'},
+  {name:'QA',icon:'qa',resp:'Cria e revisa testes, valida critérios de entrega, verifica edge cases e cobertura.',arts:'SPEC.md, PLAN.md, RULES.md',style:'Focado em cobertura, edge cases, testes de regressão e automação'},
+  {name:'DevOps',icon:'devops',resp:'Configura CI/CD, ambientes, monitoramento, escalabilidade e infraestrutura.',arts:'HOOKS.md, RULES.md, SECURITY.md',style:'Focado em automação, segurança de infra, observabilidade e zero-downtime deploy'},
+  {name:'DBA (Banco de Dados)',icon:'dba',resp:'Modela o banco, define índices, constraints, relacionamentos e estratégia de queries. Previne N+1, otimiza performance e define estratégia de cache e paginação.',arts:'SPEC.md, RULES.md, PLAN.md',style:'Focado em modelagem correta, performance de queries, integridade de dados e escalabilidade do banco'},
+  {name:'Code Reviewer',icon:'reviewer',resp:'Revisão obrigatória após qualquer /implementar. Analisa qualidade, segurança, performance, manutenibilidade e conformidade com SPEC, RULES e SECURITY. Bloqueia merge se encontrar problemas críticos.',arts:'SPEC.md, RULES.md, SECURITY.md, PLAN.md',style:'Criterioso e objetivo. Aponta problemas com severidade (Crítico/Alto/Médio/Baixo), explica o motivo e sugere a correção exata. Nunca aprova código com issue Crítico ou Alto sem resolução.'},
+  {name:'Git Master',icon:'git',resp:'Responsável exclusivo por commits, branches e PRs. NUNCA é chamado diretamente — só pode ser acionado pelo Orquestrador após o Code Reviewer emitir aprovação explícita (sem issues Crítico/Alto + todos os testes passando).',arts:'SPEC.md, PLAN.md, RULES.md',style:'Segue Conventional Commits. Referencia sempre a fase do PLAN.md no commit. Nunca sobe código quebrado.',implicit:true,gitOnly:true},
 ];
 
 const DEF_CMDS=[
@@ -618,15 +644,37 @@ function sAgents(){
 }
 
 function agItem(ag,i){
-  return`<div class="li"><div class="lih"><span class="lit" style="${ag.implicit?'color:var(--g)':'color:var(--a)'}">${ag.implicit?'⊙ ':''}${e(ag.name||'Novo Agente')}</span>
-  <button class="btn btn-sm btn-d" onclick="remAg(${i})">✕</button></div>
-  ${ag.gitOnly?`<div class="info" style="margin-bottom:8px;font-size:12px">// Agente exclusivo de versionamento. Só é acionado pelo Orquestrador após aprovação do Code Reviewer e todos os testes passando.</div>`:ag.implicit?`<div class="info" style="margin-bottom:8px;font-size:12px">// Coordena todos os outros. Lê docs e decide qual especialista acionar — incluindo segurança e banco.</div>`:''}
-  <div class="g2">
-    <div class="fg"><label>Nome</label><input type="text" value="${e(ag.name||'')}" placeholder="Ex: DBA, Arquiteto" oninput="li('agents.list',${i},'name',this.value)"></div>
-    <div class="fg"><label>Arquivos que lê primeiro</label><input type="text" value="${e(ag.arts||'')}" placeholder="Ex: SPEC.md, RULES.md" oninput="li('agents.list',${i},'arts',this.value)"></div>
+  const cls=['agent-card'];
+  if(ag.implicit)cls.push('is-implicit');
+  if(ag.gitOnly)cls.push('is-git');
+  const tags=[];
+  if(ag.implicit)tags.push('<span class="agent-tag agent-tag-imp">CORE</span>');
+  if(ag.gitOnly)tags.push('<span class="agent-tag agent-tag-git">GIT</span>');
+  const note=ag.gitOnly
+    ? `<div class="agent-note">// Agente exclusivo de versionamento. Só é acionado pelo Orquestrador após aprovação do Code Reviewer e todos os testes passando.</div>`
+    : ag.implicit
+    ? `<div class="agent-note">// Coordena todos os outros. Lê docs e decide qual especialista acionar — incluindo segurança e banco.</div>`
+    : '';
+  return`<div class="${cls.join(' ')}">
+  <div class="agent-head">
+    <div class="agent-avatar">${agentAvatar(ag)}</div>
+    <div class="agent-meta">
+      <div class="agent-name">${e(ag.name||'NOVO AGENTE')}</div>
+      <div class="agent-tags">${tags.join('')}</div>
+    </div>
+    <div class="agent-status"><span class="agent-dot"></span>ONLINE</div>
+    <button class="btn btn-sm btn-d agent-rm" onclick="remAg(${i})" aria-label="Remover agente">✕</button>
   </div>
-  <div class="fg"><label>O que faz</label><input type="text" value="${e(ag.resp||'')}" placeholder="Ex: Modela o banco, define índices e previne N+1 queries" oninput="li('agents.list',${i},'resp',this.value)"></div>
-  <div class="fg advanced-only"><label>Como responde</label><input type="text" value="${e(ag.style||'')}" placeholder="Ex: Foca em performance, integridade e escalabilidade" oninput="li('agents.list',${i},'style',this.value)"></div></div>`;
+  ${note}
+  <div class="agent-body">
+    <div class="g2">
+      <div class="fg"><label>Nome</label><input type="text" value="${e(ag.name||'')}" placeholder="Ex: DBA, Arquiteto" oninput="li('agents.list',${i},'name',this.value)"></div>
+      <div class="fg"><label>Arquivos que lê primeiro</label><input type="text" value="${e(ag.arts||'')}" placeholder="Ex: SPEC.md, RULES.md" oninput="li('agents.list',${i},'arts',this.value)"></div>
+    </div>
+    <div class="fg"><label>O que faz</label><input type="text" value="${e(ag.resp||'')}" placeholder="Ex: Modela o banco, define índices e previne N+1 queries" oninput="li('agents.list',${i},'resp',this.value)"></div>
+    <div class="fg advanced-only"><label>Como responde</label><input type="text" value="${e(ag.style||'')}" placeholder="Ex: Foca em performance, integridade e escalabilidade" oninput="li('agents.list',${i},'style',this.value)"></div>
+  </div>
+</div>`;
 }
 
 function sRules(){

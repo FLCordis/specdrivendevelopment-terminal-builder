@@ -163,6 +163,30 @@ select option{background:var(--bp);color:var(--tx)}
 .cb-item:has(input:checked) .cb-label{color:var(--p);text-shadow:0 0 4px rgba(255,140,26,.3)}
 .cb-sub{font-size:11px;color:var(--mu);margin-top:3px;font-weight:400;line-height:1.5}
 
+/* AGENT CARDS — pixel avatars + live status */
+.agent-card{position:relative;background:linear-gradient(180deg,#0c0704,#0a0603);border:1px solid var(--bd);padding:14px;margin-bottom:14px;border-radius:3px;transition:transform .15s,border-color .15s,box-shadow .2s;box-shadow:inset 0 0 0 1px rgba(255,140,26,.04),inset 0 1px 0 rgba(255,140,26,.06),0 1px 0 rgba(0,0,0,.5),0 0 0 1px transparent}
+.agent-card:hover{transform:translateY(-2px);border-color:var(--p);box-shadow:inset 0 0 0 1px rgba(255,140,26,.12),inset 0 1px 0 rgba(255,204,51,.15),0 8px 22px rgba(255,140,26,.18),0 0 0 1px rgba(255,140,26,.25)}
+.agent-card.is-implicit{border-color:var(--pd)}
+.agent-card.is-git{border-color:var(--y);background:linear-gradient(180deg,rgba(255,204,51,.05),#0a0603)}
+.agent-card.is-git:hover{border-color:var(--y);box-shadow:inset 0 0 0 1px rgba(255,204,51,.18),inset 0 1px 0 rgba(255,204,51,.25),0 8px 22px rgba(255,204,51,.18),0 0 0 1px rgba(255,204,51,.3)}
+.agent-head{display:flex;align-items:center;gap:12px;padding-bottom:11px;margin-bottom:12px;border-bottom:1px dashed var(--bd)}
+.agent-avatar{flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#1a0f06;border:1px solid var(--bd);border-radius:3px;box-shadow:inset 0 0 8px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,140,26,.15)}
+.agent-avatar svg{image-rendering:pixelated;filter:drop-shadow(0 0 3px rgba(255,140,26,.45))}
+.agent-avatar-fallback{font-family:var(--fp);font-size:12px;color:var(--p)}
+.agent-meta{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.agent-name{font-family:var(--f);font-size:13px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.9px;text-shadow:0 0 4px rgba(255,140,26,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-card.is-git .agent-name{color:var(--y);text-shadow:0 0 4px rgba(255,204,51,.4)}
+.agent-tags{display:flex;gap:5px;flex-wrap:wrap;min-height:14px}
+.agent-tag{font-family:var(--fp);font-size:6.5px;padding:3px 5px 2px;letter-spacing:.5px;line-height:1;border-radius:2px}
+.agent-tag-imp{background:rgba(255,140,26,.12);border:1px solid var(--p);color:var(--p)}
+.agent-tag-git{background:rgba(255,204,51,.14);border:1px solid var(--y);color:var(--y)}
+.agent-status{display:inline-flex;align-items:center;gap:5px;font-family:var(--f);font-size:9px;color:var(--s);font-weight:700;text-transform:uppercase;letter-spacing:1.2px;white-space:nowrap}
+.agent-dot{width:7px;height:7px;border-radius:50%;background:var(--s);box-shadow:0 0 6px var(--s),inset 0 0 1px rgba(255,255,255,.4);animation:ledPulse 1.8s ease-in-out infinite}
+.agent-rm{flex-shrink:0;padding:4px 9px !important}
+.agent-note{background:rgba(255,140,26,.05);border-left:2px solid var(--p);padding:7px 10px;margin-bottom:12px;font-family:var(--f);font-size:11.5px;color:var(--mu);line-height:1.55;border-radius:0 2px 2px 0}
+.agent-card.is-git .agent-note{border-left-color:var(--y);background:rgba(255,204,51,.05)}
+.agent-body .fg:last-child{margin-bottom:0}
+
 /* TAGS */
 .tc{background:var(--bp);border:1px solid var(--bd);padding:6px;display:flex;flex-wrap:wrap;gap:5px;min-height:42px;cursor:text}
 .tc:focus-within{border-color:var(--g)}
