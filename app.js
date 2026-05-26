@@ -160,6 +160,15 @@ function init(){
   renderFooter();
   checkMobile();
   render();
+  registerSW();
+}
+
+function registerSW(){
+  if(!('serviceWorker' in navigator)) return;
+  if(location.protocol==='file:') return;
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
 }
 
 function setUseGit(val){
