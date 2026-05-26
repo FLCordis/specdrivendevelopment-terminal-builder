@@ -1,7 +1,13 @@
 :root{
-  --g:#00ff41;--gd:#00bb30;--gk:#004d14;
-  --a:#ffb000;--r:#ff4444;--bg:#070c07;--bp:#040a04;
-  --bd:#009922;--f:'Courier New',Courier,monospace;
+  /* Apple ][ Edition — amber palette */
+  --p:#ff8c1a;--pd:#cc6a0a;--pk:#5c2f05;
+  --y:#ffcc33;--s:#4ade80;--r:#ff4444;
+  --bg:#0f0a05;--bp:#0a0603;--bd:#8b4513;
+  --tx:#ffd9a8;--mu:#a8825a;
+  --f:'JetBrains Mono','IBM Plex Mono','Courier New',Courier,monospace;
+  --fp:'Press Start 2P',monospace;
+  /* Legacy aliases — preservam classes existentes até as próximas fases migrarem */
+  --g:#ff8c1a;--gd:#cc6a0a;--gk:#5c2f05;--a:#ffcc33;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--g);font-family:var(--f);font-size:15px;font-weight:500;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
