@@ -334,15 +334,6 @@ function renderFooter(){
       <span class="sb-btn-icon">🔗</span>
       <span class="sb-btn-text"><strong>Copiar Link</strong><small>Compartilha projeto via URL</small></span>
     </button>
-    <button class="sb-btn" onclick="exportJSON()">
-      <span class="sb-btn-icon">⬇</span>
-      <span class="sb-btn-text"><strong>Salvar JSON</strong><small>Exporta seu progresso</small></span>
-    </button>
-    <label class="sb-btn" style="cursor:pointer">
-      <span class="sb-btn-icon">⬆</span>
-      <span class="sb-btn-text"><strong>Carregar JSON</strong><small>Retoma projeto salvo</small></span>
-      <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
-    </label>
     <button class="sb-btn" style="border-color:var(--r);color:var(--r)" onclick="clearAll()">
       <span class="sb-btn-icon">⊘</span>
       <span class="sb-btn-text"><strong>Limpar Tudo</strong><small>Reseta todo o progresso</small></span>
@@ -773,7 +764,6 @@ function sReview(){
   <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn btn-p" onclick="generateAll()" style="font-size:14px;padding:0 20px;height:38px">⚡ GERAR TODOS OS ARQUIVOS</button>
     <button class="btn btn-a" onclick="openTeamModal()">📋 Para o time técnico</button>
-    <button class="btn btn-sm" onclick="exportJSON()">⬇ Salvar JSON</button>
   </div>
   ${nav(true)}`;
 }
@@ -1034,12 +1024,6 @@ function clearAll(){
   try{localStorage.removeItem(STORAGE_KEY);}catch(err){}
   toast('Projeto resetado');
 }
-function exportJSON(){
-  const nm=(S.meta.name||'projeto').replace(/\s+/g,'-').toLowerCase();
-  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`${nm}-spec.json`; a.click();
-}
-
 async function downloadZip(){
   if(typeof JSZip==='undefined'){toast('JSZip ainda carregando — tente em 2s',1);return;}
   setAI('thinking','PACKING');
@@ -1063,27 +1047,6 @@ async function downloadZip(){
     toast('Pacote .zip baixado!');
     setAI('synced','SYNCED');
   }catch(err){setAI('error','ERROR');throw err}
-}
-function importJSON(ev){
-  const f=ev.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=e=>{
-    try{
-      Object.assign(S,JSON.parse(e.target.result));
-      // Re-sync gitOnly items based on loaded useGit value
-      const gitAgent=DEF_AGENTS.find(a=>a.gitOnly);
-      const gitCmd=DEF_CMDS.find(c=>c.gitOnly);
-      S.agents.list=S.agents.list.filter(a=>!a.gitOnly);
-      S.cmds.list=S.cmds.list.filter(c=>!c.gitOnly);
-      if(S.meta.useGit===true){
-        if(gitAgent) S.agents.list.push({...gitAgent});
-        if(gitCmd) S.cmds.list.push({...gitCmd});
-      }
-      render();saveToLocalStorage();toast('Projeto carregado!');
-    }
-    catch{toast('Erro no arquivo JSON',1);}
-  };
-  r.readAsText(f);
 }
 function toast(msg,err=0){
   const old=document.querySelector('.toast'); if(old) old.remove();
