@@ -112,10 +112,36 @@ const SEC_OPTS=[
   {id:'sec-logs',   label:'Não quero dados pessoais nos logs',         sub:'Logs nunca registram CPF, e-mail ou telefone',                val:'Logs sem PII. Estrutura JSON com traceId. Auditoria de ações críticas em log separado.'},
 ];
 
+// ── STORAGE ───────────────────────────────────────────────────
+const STORAGE_KEY='sdd-terminal-state-v1';
+let _saveTimer=null;
+
+function loadFromLocalStorage(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const parsed=JSON.parse(raw);
+    Object.assign(S,parsed);
+    return true;
+  }catch(err){return false;}
+}
+
+function saveToLocalStorage(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S));}catch(err){}
+}
+
+function scheduleSave(){
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(saveToLocalStorage,400);
+}
+
 // ── BOOT ──────────────────────────────────────────────────────
 function init(){
+  // Load order: localStorage first, then hash (shared link wins if present)
+  const loadedFromStorage=loadFromLocalStorage();
   const loadedFromHash=hashToState();
-  if(!loadedFromHash){
+  const loaded=loadedFromStorage||loadedFromHash;
+  if(!loaded){
     if(!S.agents.list.length) S.agents.list=DEF_AGENTS.filter(a=>!a.gitOnly).map(a=>({...a}));
     if(!S.cmds.list.length)   S.cmds.list=DEF_CMDS.filter(c=>!c.gitOnly).map(c=>({...c}));
   } else {
@@ -147,7 +173,7 @@ function setUseGit(val){
     S.agents.list=S.agents.list.filter(a=>!a.gitOnly);
     S.cmds.list=S.cmds.list.filter(c=>!c.gitOnly);
   }
-  renderStep(); schedPV(); renderSB();
+  renderStep(); schedPV(); renderSB(); scheduleSave();
 }
 
 function copyLink(){
@@ -697,7 +723,7 @@ function toggleSec(id){
   const idx=S.quality.secChecks.indexOf(id);
   if(idx>=0) S.quality.secChecks.splice(idx,1);
   else S.quality.secChecks.push(id);
-  schedPV();renderSB();
+  schedPV();renderSB();scheduleSave();
 }
 function hasCheck(id){return S.quality.secChecks.includes(id);}
 function secText(){
@@ -715,35 +741,35 @@ function addTag(ev,path,inputId){
   const pts=path.split('.'); let o=S;
   for(let i=0;i<pts.length-1;i++) o=o[pts[i]];
   o[pts[pts.length-1]].push(v);
-  ev.target.value=''; renderStep(); schedPV();
+  ev.target.value=''; renderStep(); schedPV(); scheduleSave();
 }
 function rmTag(path,idx){
   const pts=path.split('.'); let o=S;
   for(let i=0;i<pts.length-1;i++) o=o[pts[i]];
-  o[pts[pts.length-1]].splice(idx,1); renderStep(); schedPV();
+  o[pts[pts.length-1]].splice(idx,1); renderStep(); schedPV(); scheduleSave();
 }
 function u(path,val){
   const pts=path.split('.'); let o=S;
   for(let i=0;i<pts.length-1;i++) o=o[pts[i]];
-  o[pts[pts.length-1]]=val; schedPV(); renderSB(); scheduleHashUpdate();
+  o[pts[pts.length-1]]=val; schedPV(); renderSB(); scheduleSave();
 }
 function li(path,idx,field,val){
   const pts=path.split('.'); let o=S;
   for(const p of pts) o=o[p];
-  o[idx][field]=val; schedPV(); scheduleHashUpdate();
+  o[idx][field]=val; schedPV(); scheduleSave();
 }
-function addSth(){S.domain.stakeholders.push({name:'',desc:'',goals:''});renderStep();}
-function remSth(i){S.domain.stakeholders.splice(i,1);renderStep();}
-function addUC(){S.domain.useCases.push({title:'',actor:'',desc:''});renderStep();}
-function remUC(i){S.domain.useCases.splice(i,1);renderStep();}
-function addPh(){S.plan.phases.push({name:'',goal:'',deliverables:'',done:'',deadline:''});renderStep();}
-function remPh(i){S.plan.phases.splice(i,1);renderStep();}
-function addAg(){S.agents.list.push({name:'',resp:'',arts:'',style:''});renderStep();}
-function remAg(i){S.agents.list.splice(i,1);renderStep();}
-function addHk(){S.rules.hooks.push({trigger:'',action:'',tool:''});renderStep();}
-function remHk(i){S.rules.hooks.splice(i,1);renderStep();}
-function addCmd(){S.cmds.list.push({name:'',goal:'',when:'',args:'',reads:''});renderStep();}
-function remCmd(i){S.cmds.list.splice(i,1);renderStep();}
+function addSth(){S.domain.stakeholders.push({name:'',desc:'',goals:''});renderStep();scheduleSave();}
+function remSth(i){S.domain.stakeholders.splice(i,1);renderStep();scheduleSave();}
+function addUC(){S.domain.useCases.push({title:'',actor:'',desc:''});renderStep();scheduleSave();}
+function remUC(i){S.domain.useCases.splice(i,1);renderStep();scheduleSave();}
+function addPh(){S.plan.phases.push({name:'',goal:'',deliverables:'',done:'',deadline:''});renderStep();scheduleSave();}
+function remPh(i){S.plan.phases.splice(i,1);renderStep();scheduleSave();}
+function addAg(){S.agents.list.push({name:'',resp:'',arts:'',style:''});renderStep();scheduleSave();}
+function remAg(i){S.agents.list.splice(i,1);renderStep();scheduleSave();}
+function addHk(){S.rules.hooks.push({trigger:'',action:'',tool:''});renderStep();scheduleSave();}
+function remHk(i){S.rules.hooks.splice(i,1);renderStep();scheduleSave();}
+function addCmd(){S.cmds.list.push({name:'',goal:'',when:'',args:'',reads:''});renderStep();scheduleSave();}
+function remCmd(i){S.cmds.list.splice(i,1);renderStep();scheduleSave();}
 
 // ── PREVIEW ──────────────────────────────────────────────────
 function renderPVTabs(){
@@ -828,6 +854,7 @@ function clearAll(){
   };
   render(); schedPV();
   history.replaceState(null,'',window.location.pathname);
+  try{localStorage.removeItem(STORAGE_KEY);}catch(err){}
   toast('Projeto resetado');
 }
 function exportJSON(){
@@ -850,7 +877,7 @@ function importJSON(ev){
         if(gitAgent) S.agents.list.push({...gitAgent});
         if(gitCmd) S.cmds.list.push({...gitCmd});
       }
-      render();stateToHash();toast('Projeto carregado!');
+      render();saveToLocalStorage();toast('Projeto carregado!');
     }
     catch{toast('Erro no arquivo JSON',1);}
   };
@@ -1801,7 +1828,7 @@ function loadTemplate(i){
   closeTemplateModal();
   render();
   schedPV();
-  stateToHash();
+  saveToLocalStorage();
   toast(`Template "${tmpl.label}" carregado!`);
 }
 
@@ -1983,9 +2010,7 @@ function getActiveGens(){
   return S.meta.useGit===true ? [...[gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity],...GIT_GENS] : [gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity];
 }
 
-// ── FASE 1: URL HASH STATE ────────────────────────────────────
-let _hashTimer=null;
-
+// ── URL HASH (compartilhar via link, sob demanda) ─────────────
 function stateToHash(){
   try{
     const json=JSON.stringify(S);
@@ -2005,11 +2030,6 @@ function hashToState(){
     Object.assign(S,parsed);
     return true;
   }catch(err){return false;}
-}
-
-function scheduleHashUpdate(){
-  clearTimeout(_hashTimer);
-  _hashTimer=setTimeout(stateToHash,800);
 }
 
 
