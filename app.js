@@ -180,9 +180,63 @@ function init(){
   }
   renderFooter();
   checkMobile();
+  bootSequence();
   render();
   registerSW();
   setAI('ready','AI READY');
+}
+
+const BOOT_LINES=[
+  '╔════════════════════════════════════════╗',
+  '║  SDD BUILDER · APPLE ][ EDITION  v1.0  ║',
+  '╚════════════════════════════════════════╝',
+  '',
+  '> INITIALIZING NEURAL CORE.............. [OK]',
+  '> LOADING AGENT ROSTER................... [OK]',
+  '>   ├ orchestrator..................... ✓',
+  '>   ├ architect........................ ✓',
+  '>   ├ backend · frontend · qa.......... ✓',
+  '>   └ devops · dba · reviewer.......... ✓',
+  '> MOUNTING MEMORY (localStorage)....... [OK]',
+  '> READY_'
+];
+
+function bootSequence(){
+  let booted=false;
+  try{booted=localStorage.getItem('sdd.booted')==='1'}catch(_){}
+  if(booted) return;
+  try{if(window.matchMedia('(max-width: 479px)').matches){localStorage.setItem('sdd.booted','1');return;}}catch(_){}
+  const el=document.getElementById('boot');
+  const out=document.getElementById('boot-out');
+  if(!el||!out){console.warn('[bootSequence] #boot not found');return;}
+  el.removeAttribute('hidden');
+  el.hidden=false;
+  out.textContent='';
+  let li=0,ci=0,done=false;
+  const finish=()=>{
+    if(done) return; done=true;
+    try{localStorage.setItem('sdd.booted','1')}catch(_){}
+    el.classList.add('fade-out');
+    document.removeEventListener('click',skip);
+    document.removeEventListener('keydown',skip);
+    setTimeout(()=>{el.setAttribute('hidden','');el.classList.remove('fade-out')},260);
+  };
+  const skip=()=>finish();
+  document.addEventListener('click',skip);
+  document.addEventListener('keydown',skip);
+  const tick=()=>{
+    if(done) return;
+    if(li>=BOOT_LINES.length){setTimeout(finish,500);return;}
+    const line=BOOT_LINES[li];
+    if(ci<line.length){
+      out.textContent+=line.charAt(ci++);
+      setTimeout(tick,line.startsWith('>')?14:22);
+    } else {
+      out.textContent+='\n';li++;ci=0;
+      setTimeout(tick,line===''?80:140);
+    }
+  };
+  setTimeout(tick,120);
 }
 
 // AI status (header LED + bottom aibar). state: 'ready'|'thinking'|'synced'|'error'

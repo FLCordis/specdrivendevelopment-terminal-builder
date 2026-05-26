@@ -41,6 +41,17 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .ai-status[data-state="error"] .led{background:var(--r);box-shadow:0 0 8px var(--r),inset 0 0 2px rgba(255,255,255,.4);animation:ledPulse .4s ease-in-out infinite}
 @keyframes ledPulse{0%,100%{opacity:1}50%{opacity:.45}}
 
+/* BOOT SCREEN */
+#boot{position:fixed;inset:0;background:var(--bg);z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--f);color:var(--p);padding:24px;animation:bootScan 1.6s linear infinite}
+#boot[hidden]{display:none}
+#boot.fade-out{animation:bootFade .25s ease-out forwards}
+#boot-out{font-family:var(--f);font-size:13px;line-height:1.55;color:var(--p);text-shadow:0 0 6px rgba(255,140,26,.35);white-space:pre;letter-spacing:.3px;max-width:100%;overflow:hidden}
+#boot-out::after{content:'█';color:var(--y);animation:bootCaret .53s steps(2) infinite;margin-left:2px}
+#boot-skip{position:fixed;bottom:20px;font-family:var(--f);font-size:10px;color:var(--mu);letter-spacing:2px;text-transform:uppercase;opacity:.7}
+@keyframes bootCaret{0%,49%{opacity:1}50%,100%{opacity:.1}}
+@keyframes bootFade{to{opacity:0;visibility:hidden}}
+@keyframes bootScan{0%{box-shadow:inset 0 0 0 0 rgba(255,140,26,0)}50%{box-shadow:inset 0 -200px 80px -180px rgba(255,140,26,.04)}100%{box-shadow:inset 0 0 0 0 rgba(255,140,26,0)}}
+
 #main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 #main #sc{flex:1;overflow-y:auto;min-height:0}
 #aibar{flex-shrink:0;height:28px;display:flex;align-items:center;gap:10px;padding:0 16px;border-top:1px solid var(--bd);background:linear-gradient(180deg,#0a0603,var(--bp));font-family:var(--f);font-size:10px;color:var(--mu);font-weight:600;letter-spacing:.8px;text-transform:uppercase;white-space:nowrap;overflow:hidden}
