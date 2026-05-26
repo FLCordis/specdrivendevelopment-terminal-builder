@@ -20,7 +20,7 @@ let S={
   quality:{testTypes:[],testTools:[],obs:'',envs:[],cicd:'',security:'',secChecks:[]},
   plan:{phases:[]},
   agents:{list:[]},
-  rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+  rules:{code:'',architecture:'',tests:'',security:'',examples:'',hooks:[]},
   cmds:{list:[]}
 };
 
@@ -60,7 +60,7 @@ const TEMPLATES=[
       arch:{style:'monolito-modular',languages:['TypeScript'],frameworks:['Node.js','Express','Zod'],databases:['PostgreSQL'],messaging:[],integrations:[],scalability:''},
       quality:{testTypes:['Unitário','Integração'],testTools:['Jest','Supertest'],obs:'',envs:[],cicd:'',security:'',secChecks:['sec-login','sec-roles']},
       plan:{phases:[]},
-      rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+      rules:{code:'',architecture:'',tests:'',security:'',examples:'',hooks:[]},
     }
   },
   {
@@ -73,7 +73,7 @@ const TEMPLATES=[
       arch:{style:'app-web',languages:['TypeScript'],frameworks:['Next.js','NestJS','Prisma'],databases:['PostgreSQL','Redis'],messaging:['Bull'],integrations:[],scalability:''},
       quality:{testTypes:['Unitário','Integração','E2E'],testTools:['Jest','Playwright'],obs:'',envs:[],cicd:'',security:'',secChecks:['sec-login','sec-lgpd','sec-roles','sec-cripto','sec-logs']},
       plan:{phases:[]},
-      rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+      rules:{code:'',architecture:'',tests:'',security:'',examples:'',hooks:[]},
     }
   },
   {
@@ -86,7 +86,7 @@ const TEMPLATES=[
       arch:{style:'event-driven',languages:['JavaScript','Node.js'],frameworks:['N8N'],databases:['PostgreSQL'],messaging:['Redis','RabbitMQ'],integrations:['Webhook','REST API'],scalability:''},
       quality:{testTypes:['Integração','E2E'],testTools:['Playwright'],obs:'',envs:[],cicd:'',security:'',secChecks:['sec-login','sec-logs']},
       plan:{phases:[]},
-      rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+      rules:{code:'',architecture:'',tests:'',security:'',examples:'',hooks:[]},
     }
   },
   {
@@ -99,7 +99,7 @@ const TEMPLATES=[
       arch:{style:'monolito-modular',languages:['TypeScript'],frameworks:['Next.js','Prisma'],databases:['PostgreSQL','Redis'],messaging:['Bull'],integrations:['Stripe','SendGrid'],scalability:''},
       quality:{testTypes:['Unitário','Integração','E2E'],testTools:['Jest','Playwright'],obs:'',envs:[],cicd:'',security:'',secChecks:['sec-login','sec-lgpd','sec-roles','sec-cripto','sec-logs']},
       plan:{phases:[]},
-      rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+      rules:{code:'',architecture:'',tests:'',security:'',examples:'',hooks:[]},
     }
   },
 ];
@@ -546,6 +546,9 @@ function sRules(){
   <div class="fg"><label>${optLabel('Regras de segurança adicionais')}</label>
   ${transl('Complementa os checkboxes da etapa anterior. O SECURITY.md é gerado automaticamente com as regras técnicas.')}
   <textarea placeholder="Ex: Nunca logar CPF. Senhas apenas via variáveis de ambiente. Validar todo input com Zod." oninput="u('rules.security',this.value)">${e(r.security)}</textarea>${optNote()}</div>
+  <div class="fg advanced-only"><label>${optLabel('Exemplos de Código (Few-Shot)')}</label>
+  ${transl('Trechos de código que o Claude deve usar como referência de estilo. Injetados em CLAUDE.md dentro de uma tag &lt;examples&gt;.')}
+  <textarea style="min-height:120px" placeholder="// Ex: padrão de handler de API\nexport async function getUser(req, res) {\n  const schema = z.object({ id: z.string().uuid() });\n  const { id } = schema.parse(req.params);\n  const user = await db.user.findUnique({ where: { id } });\n  if (!user) throw new HttpError(404, 'Not found');\n  return res.json({ data: user });\n}" oninput="u('rules.examples',this.value)">${e(r.examples||'')}</textarea>${optNote()}</div>
   <div class="fg advanced-only"><label>${optLabel('Automações (CI/CD hooks)')}</label>
   <div id="hooks">${r.hooks.map((h,i)=>hkItem(h,i)).join('')}</div>
   <button class="btn btn-sm" onclick="addHk()" style="margin-top:4px">+ Adicionar automação</button></div>
@@ -862,7 +865,7 @@ function clearAll(){
     quality:{testTypes:[],testTools:[],obs:'',envs:[],cicd:'',security:'',secChecks:[]},
     plan:{phases:[]},
     agents:{list:DEF_AGENTS.filter(a=>!a.gitOnly).map(a=>({...a}))},
-    rules:{code:'',architecture:'',tests:'',security:'',hooks:[]},
+    rules:{code:'',architecture:'',tests:'',security:'',examples:'',hooks:[]},
     cmds:{list:DEF_CMDS.filter(c=>!c.gitOnly).map(c=>({...c}))}
   };
   render(); schedPV();
@@ -936,12 +939,18 @@ const ls=(arr,p='-')=>arr.length?arr.map(i=>`${p} ${i}`).join('\n'):`- [NEEDS CL
 
 function gClaude(){
   const cmdTbl=S.cmds.list.map(c=>`| \`${c.name||'?'}\` | ${c.goal||'?'} |`).join('\n');
+  const examplesBlock=S.rules.examples&&S.rules.examples.trim()
+    ? `\n<examples>\nReferência de estilo de código que você DEVE seguir ao implementar neste projeto.\nUse estes trechos como modelo de qualidade, estrutura e idioma.\n\n\`\`\`\n${S.rules.examples}\n\`\`\`\n</examples>\n\n---\n`
+    : '';
+
   return `# CLAUDE.md — Constituição do Projeto
 
 > Leia este arquivo antes de qualquer interação.
 > Você é o **Orquestrador / Team Lead**: leia SPEC.md, PLAN.md e SECURITY.md, entenda a tarefa, decida qual agente especialista acionar e garanta conformidade com RULES.md e SECURITY.md.
 
 ---
+
+<project_scope>
 
 ## Projeto
 
@@ -953,16 +962,6 @@ function gClaude(){
 | **Público-alvo** | ${nc(S.meta.audience)} |
 | **Pitch** | ${nc(S.meta.pitch)} |
 
-### Stack Principal
-
-- **Linguagens:** ${S.arch.languages.join(', ')||'[NEEDS CLARIFICATION]'}
-- **Frameworks:** ${S.arch.frameworks.join(', ')||'[NEEDS CLARIFICATION]'}
-- **Banco de dados:** ${S.arch.databases.join(', ')||'[NEEDS CLARIFICATION]'}
-- **Cache / Filas:** ${S.arch.messaging.join(', ')||'—'}
-- **Arquitetura:** ${nc(S.arch.style)}
-
----
-
 ## Objetivos
 
 **Problema:** ${nc(S.domain.problem)}
@@ -970,7 +969,25 @@ function gClaude(){
 **Objetivos:**
 ${ls(S.domain.objectives)}
 
+</project_scope>
+
 ---
+
+<architecture>
+
+## Stack Principal
+
+- **Linguagens:** ${S.arch.languages.join(', ')||'[NEEDS CLARIFICATION]'}
+- **Frameworks:** ${S.arch.frameworks.join(', ')||'[NEEDS CLARIFICATION]'}
+- **Banco de dados:** ${S.arch.databases.join(', ')||'[NEEDS CLARIFICATION]'}
+- **Cache / Filas:** ${S.arch.messaging.join(', ')||'—'}
+- **Arquitetura:** ${nc(S.arch.style)}
+
+</architecture>
+
+---
+
+<sources_of_truth>
 
 ## Fontes de Verdade
 
@@ -984,7 +1001,11 @@ ${ls(S.domain.objectives)}
 | \`HOOKS.md\` | Automações e CI/CD |
 | \`SLASH-COMMANDS.md\` | Comandos disponíveis |
 
+</sources_of_truth>
+
 ---
+
+<rules_for_claude>
 
 ## Regras para o Claude
 
@@ -998,7 +1019,11 @@ ${ls(S.domain.objectives)}
 8. Aplique SOLID, DRY e KISS — questione complexidade desnecessária.
 9. Como Orquestrador: identifique e acione o agente especialista adequado para cada tarefa.
 
+</rules_for_claude>
+
 ---
+
+<engineering_principles>
 
 ## Princípios de Engenharia
 
@@ -1008,7 +1033,11 @@ ${ls(S.domain.objectives)}
 - **Clean Code**: nomes claros, funções pequenas, responsabilidade única
 - **Segurança por design**: não é feature extra — é parte de cada componente
 
+</engineering_principles>
+
 ---
+
+<workflow>
 
 ## Fluxo de Trabalho
 
@@ -1019,13 +1048,33 @@ Especificar → Clarificar → Planejar → [Sec Review] → Implementar → Cod
 > ⚠️ O Code Reviewer deve ser acionado após **toda** /implementar, sem exceção.
 > Nenhum commit ou PR sem aprovação do Code Reviewer.
 
+</workflow>
+
 ---
+
+<slash_commands>
 
 ## Slash Commands
 
 | Comando | Objetivo |
 |---------|----------|
 ${cmdTbl||'| — | — |'}
+
+</slash_commands>
+
+---
+${examplesBlock}
+<thinking_instruction>
+Antes de gerar qualquer código, use a tag \`<thinking>...</thinking>\` para raciocinar passo a passo:
+
+1. Reformule a tarefa com suas próprias palavras
+2. Identifique quais arquivos de verdade (SPEC.md, PLAN.md, RULES.md, SECURITY.md) são relevantes
+3. Liste os agentes especialistas que precisam ser acionados
+4. Verifique alinhamento com as regras de segurança aplicáveis
+5. Só então produza o código ou a explicação final
+
+A tag \`<thinking>\` é interna ao seu raciocínio — não a inclua no código entregue ao usuário.
+</thinking_instruction>
 `;
 }
 
@@ -1175,6 +1224,8 @@ function gAgents(){
   const gitMasterSection=S.meta.useGit&&gitMaster?`
 ---
 
+<git_master>
+
 ## Git Master
 
 > **Agente exclusivo de versionamento.** NUNCA é chamado diretamente.
@@ -1196,6 +1247,8 @@ Fluxo obrigatório antes de qualquer commit:
   ❌ NUNCA commitar com testes falhando
   ❌ NUNCA commitar com issue Crítico ou Alto aberto
 \`\`\`
+
+</git_master>
 `:'';
 
   return `# AGENTS.md — Agentes de IA
@@ -1204,6 +1257,8 @@ Fluxo obrigatório antes de qualquer commit:
 > O Orquestrador é o ponto de entrada padrão e coordena todos os outros.
 
 ---
+
+<orchestrator>
 
 ## Orquestrador / Team Lead
 
@@ -1221,7 +1276,11 @@ Receber tarefa → Ler docs → Identificar agente → Acionar com contexto
 → Validar contra RULES.md + SECURITY.md → Entregar com explicação
 \`\`\`
 
+</orchestrator>
+
 ---
+
+<specialists>
 
 ## Agentes Especialistas
 
@@ -1234,8 +1293,12 @@ ${specs.map(a=>{
 | **Arquivos** | \`${(a.arts||'').replace(/,\s*/g,'`, `')}\` |
 | **Estilo** | ${a.style||'[NEEDS CLARIFICATION]'} |
 `;}).join('\n')||'> [NEEDS CLARIFICATION]'}
+
+</specialists>
 ${gitMasterSection}
 ---
+
+<usage>
 
 ## Como Usar
 
@@ -1249,6 +1312,8 @@ Decida qual agente especialista usar e execute.
 Você é o agente DBA. Leia SPEC.md e RULES.md.
 Tarefa: revisar a migration users.sql e sugerir índices.
 \`\`\`
+
+</usage>
 `;
 }
 
@@ -1322,6 +1387,8 @@ function gRules(){
 
 ---
 
+<global_principles>
+
 ## Princípios Globais
 
 - **SOLID**: responsabilidade única, aberto/fechado, substituição de Liskov, segregação de interfaces, inversão de dependência.
@@ -1330,19 +1397,31 @@ function gRules(){
 - **Clean Code**: nomes claros, funções pequenas (≤ 20 linhas), responsabilidade única.
 - **Não superengenheirar**: questionar toda tecnologia antes de adicionar.
 
+</global_principles>
+
 ---
+
+<code_rules>
 
 ## Código
 
 ${S.rules.code||'[NEEDS CLARIFICATION: Defina linters, formatadores e convenções]'}
 
+</code_rules>
+
 ---
+
+<architecture_rules>
 
 ## Arquitetura
 
 ${S.rules.architecture||'[NEEDS CLARIFICATION: Defina limites entre módulos e camadas]'}
 
+</architecture_rules>
+
 ---
+
+<database_rules>
 
 ## Banco de Dados (acionar agente DBA)
 
@@ -1353,7 +1432,11 @@ ${S.rules.architecture||'[NEEDS CLARIFICATION: Defina limites entre módulos e c
 - Dados duplicados são proibidos — normalização adequada.
 - Estratégia de cache definida para hot paths (Redis ou similar).
 
+</database_rules>
+
 ---
+
+<test_rules>
 
 ## Testes
 
@@ -1365,13 +1448,21 @@ Pirâmide de testes:
 - **E2E**: fluxos críticos do usuário (login, checkout, etc.)
 - **Carga**: k6 ou similar para endpoints de alto volume
 
+</test_rules>
+
 ---
+
+<security_rules>
 
 ## Segurança${noSec?' [NEEDS CLARIFICATION: Defina requisitos na etapa Qualidade & Operação]':''}
 ${authRules}${rolesRules}${apiRules}${webRules}${lgpdRules}${cryptoRules}${logRules}
 ${S.rules.security?'\n### Regras Adicionais\n'+S.rules.security:''}
 
+</security_rules>
+
 ---
+
+<performance_rules>
 
 ## Performance
 
@@ -1380,7 +1471,11 @@ ${S.rules.security?'\n### Regras Adicionais\n'+S.rules.security:''}
 - Frontend: lazy loading, code splitting, otimização de imagens, SSR/SSG quando aplicável.
 - Compressão de resposta (gzip/brotli) habilitada.
 
+</performance_rules>
+
 ---
+
+<documentation_rules>
 
 ## Documentação
 
@@ -1388,7 +1483,11 @@ ${S.rules.security?'\n### Regras Adicionais\n'+S.rules.security:''}
 - Decisões arquiteturais em \`docs/adr/\` (Architecture Decision Records).
 - Mapa de dados sensíveis em \`docs/data-map.md\`.
 
+</documentation_rules>
+
 ---
+
+<commit_rules>
 
 ## Commits e Branches
 
@@ -1401,13 +1500,21 @@ Exemplos:
   perf(db): adicionar índice na coluna user_id da tabela orders
 \`\`\`
 
+</commit_rules>
+
+<pr_review_rules>
+
 ## PR Review
 
 - PRs com auth, permissões ou dados sensíveis: revisão de segurança obrigatória (/sec-review).
 - PRs com models, migrations ou queries: revisão do agente DBA (/db-review).
 - Nenhum merge com testes falhando ou vulnerabilidade crítica no \`npm audit\`.
+
+</pr_review_rules>
 ${S.meta.useGit?`
 ---
+
+<git_workflow>
 
 ## Fluxo de Versionamento com Git Master
 
@@ -1419,6 +1526,8 @@ Formato: \`tipo(escopo): descrição\` + corpo com referência à fase do PLAN.m
 Branches:
 - \`main\`/\`master\`: nunca commitar direto — sempre via PR aprovado
 - Features: \`feat/nome-da-feature\` | Fixes: \`fix/descricao-do-bug\`
+
+</git_workflow>
 `:''}`;
 }
 
