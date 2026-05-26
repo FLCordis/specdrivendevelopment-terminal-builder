@@ -10,8 +10,29 @@ const STEPS=[
   {id:'cmds',    label:'Comandos Rápidos'},
   {id:'review',  label:'Revisão Final'},
 ];
-const FILES=['CLAUDE.md','SPEC.md','PLAN.md','AGENTS.md','RULES.md','HOOKS.md','SLASH-COMMANDS.md','SECURITY.md'];
 let cur=0, pvTab=0, appMode='beginner', pvCollapsed=false;
+
+// Mapa de slugs em inglês para os agentes default. Custom agents caem em slugifyAgent().
+const AGENT_SLUG_MAP={
+  'Orquestrador / Team Lead':'orchestrator',
+  'Arquiteto':'architect',
+  'Backend':'backend',
+  'Frontend':'frontend',
+  'QA':'qa',
+  'DevOps':'devops',
+  'DBA (Banco de Dados)':'dba',
+  'Code Reviewer':'code-reviewer',
+  'Git Master':'git-master',
+};
+function slugifyAgent(ag){
+  if(ag&&AGENT_SLUG_MAP[ag.name]) return AGENT_SLUG_MAP[ag.name];
+  const raw=(ag&&ag.name)||'agent';
+  return raw.toString()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'')||'agent';
+}
 
 let S={
   meta:{name:'',type:'',stage:'',audience:'',pitch:'',kpis:[],useGit:null},
@@ -256,7 +277,7 @@ function renderPVOverlay(){
   const files=getActiveFiles();
   if(pvTab>=files.length) pvTab=0;
   document.getElementById('pvtabs2').innerHTML=files.map((f,i)=>
-    `<div class="pvt${i===pvTab?' active':''}" onclick="switchPV2(${i})">${f.split('/').pop()}</div>`).join('');
+    `<div class="pvt${i===pvTab?' active':''}" title="${f}" onclick="switchPV2(${i})">${f}</div>`).join('');
   const md=(gens[pvTab]||(() => ''))();
   document.getElementById('pvc2').innerHTML=`<pre>${hlNC(md)}</pre>`;
 }
@@ -792,7 +813,7 @@ function renderPVTabs(){
   const files=getActiveFiles();
   if(pvTab>=files.length) pvTab=0;
   document.getElementById('pvtabs').innerHTML=files.map((f,i)=>
-    `<div class="pvt${i===pvTab?' active':''}" onclick="switchPV(${i})">${f.split('/').pop()}</div>`).join('');
+    `<div class="pvt${i===pvTab?' active':''}" title="${f}" onclick="switchPV(${i})">${f}</div>`).join('');
 }
 function switchPV(i){pvTab=i;renderPVTabs();renderPV();}
 let pvTimer=null;
@@ -879,21 +900,15 @@ function exportJSON(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`${nm}-spec.json`; a.click();
 }
 
-// Map preview-tab labels to actual repo paths inside the ZIP
-function zipPathFor(label){
-  if(label==='PR Template') return '.github/pull_request_template.md';
-  return label;
-}
-
 async function downloadZip(){
   if(typeof JSZip==='undefined'){toast('JSZip ainda carregando — tente em 2s',1);return;}
-  const gens=getActiveGens();
-  const files=getActiveFiles();
+  const manifest=getManifest();
   const zip=new JSZip();
-  for(let i=0;i<files.length;i++){
-    const content=gens[i]();
+  for(const entry of manifest){
+    const content=entry.gen();
     if(!content) continue;
-    zip.file(zipPathFor(files[i]),content);
+    // JSZip cria docs/ e agents/ automaticamente a partir do path
+    zip.file(entry.path,content);
   }
   zip.file('spec.json',JSON.stringify(S,null,2));
   const blob=await zip.generateAsync({type:'blob'});
@@ -936,6 +951,272 @@ function toast(msg,err=0){
 // ── MARKDOWN GENERATORS ───────────────────────────────────────
 const nc=(v,fb='')=>v||(fb?`[NEEDS CLARIFICATION: ${fb}]`:'[NEEDS CLARIFICATION]');
 const ls=(arr,p='-')=>arr.length?arr.map(i=>`${p} ${i}`).join('\n'):`- [NEEDS CLARIFICATION]`;
+
+function gStart(){
+  const name=nc(S.meta.name);
+  const firstPhase=S.plan.phases[0];
+  const firstPhaseLine=firstPhase
+    ? `Fase 1 — ${firstPhase.name||'[NEEDS CLARIFICATION]'} (objetivo: ${firstPhase.goal||'[NEEDS CLARIFICATION]'})`
+    : '[NEEDS CLARIFICATION: nenhuma fase definida no roadmap]';
+  const agentList=S.agents.list.map(a=>`- \`/agents/${slugifyAgent(a)}.md\` — ${a.name||'agente'}`).join('\n')||'- [NEEDS CLARIFICATION]';
+  const changelogLine=S.meta.useGit?'8. `/docs/08-changelog.md` → histórico de versões':'';
+
+  return `# START.md — Bootstrap Agentico
+
+> Ponto de entrada do projeto **${name}**. Se você é uma IA chegando neste repositório do zero, leia este arquivo PRIMEIRO.
+
+---
+
+<bootstrap_protocol>
+
+Você é o **Orquestrador**. Sua missão: levar este projeto do estado atual até produção seguindo a ordem estrita abaixo. Não pule etapas. Não invente contexto que não está documentado — abra \`[NEEDS CLARIFICATION]\` quando faltar informação.
+
+</bootstrap_protocol>
+
+---
+
+<context_assimilation>
+
+## Passo a passo de Assimilação de Contexto
+
+Leia, **na ordem**, antes de qualquer ação:
+
+1. \`/CLAUDE.md\` → regras globais, princípios de engenharia e o uso obrigatório de \`<thinking>\`
+2. \`/docs/01-product-spec.md\` → problema, stakeholders, casos de uso e escopo
+3. \`/docs/02-architecture.md\` → stack, estilo arquitetural e dependências
+4. \`/docs/03-roadmap.md\` → fases, milestones e **Critérios de Aceite**
+5. \`/docs/04-security.md\` → threat model e gates obrigatórios de segurança
+6. \`/docs/05-rules.md\` → padrões de código, testes e PR review
+7. \`/agents/\` → conheça os especialistas disponíveis e quando acionar cada um
+${changelogLine}
+
+Após ler, confirme em \`<thinking>\` que você entendeu (a) o problema, (b) a arquitetura, (c) a fase atual do roadmap e (d) quais agentes serão acionados.
+
+</context_assimilation>
+
+---
+
+<first_action>
+
+## Primeira Ação
+
+Comece pela **${firstPhaseLine}** do roadmap.
+
+\`\`\`
+1. Abrir <thinking> e mapear arquivos a ler, agente a acionar e critério de aceite que será validado.
+2. Acionar o agente especialista apropriado de /agents/
+3. Implementar a menor unidade de valor da fase
+4. Acionar /agents/code-reviewer.md
+5. Rodar /testar — todos os testes verdes
+6. Validar contra os <acceptance_criteria> da fase no roadmap
+\`\`\`
+
+</first_action>
+
+---
+
+<phase_gate>
+
+## Regra de Avanço de Fase
+
+**Você NÃO PODE avançar para a Fase N+1 enquanto qualquer item dos \`<acceptance_criteria>\` da Fase N estiver pendente, com teste falhando ou com issue Crítico/Alto em aberto no \`/agents/code-reviewer.md\`.**
+
+Se a fase atual estiver bloqueada: pare, descreva o bloqueio em \`<thinking>\`, e devolva o controle ao usuário.
+
+</phase_gate>
+
+---
+
+<thinking_required>
+
+## Tag \`<thinking>\` é OBRIGATÓRIA
+
+Antes de QUALQUER alteração de código, arquivo ou arquitetura, abra:
+
+\`\`\`
+<thinking>
+- Objetivo desta ação:
+- Arquivos lidos (de /docs e /agents):
+- Agente especialista acionado:
+- Critério de aceite que será validado:
+- Riscos de segurança aplicáveis (consultar /docs/04-security.md):
+</thinking>
+\`\`\`
+
+Saídas sem \`<thinking>\` prévio são consideradas inválidas e devem ser refeitas.
+
+</thinking_required>
+
+---
+
+<agents_index>
+
+## Índice de Agentes
+
+${agentList}
+
+</agents_index>
+`;
+}
+
+function gArchitecture(){
+  const langs=S.arch.languages.length?S.arch.languages.map(l=>`- ${l}`).join('\n'):'- [NEEDS CLARIFICATION]';
+  const fwks=S.arch.frameworks.length?S.arch.frameworks.map(l=>`- ${l}`).join('\n'):'- [NEEDS CLARIFICATION]';
+  const dbs=S.arch.databases.length?S.arch.databases.map(l=>`- ${l}`).join('\n'):'- [NEEDS CLARIFICATION]';
+  const msgs=S.arch.messaging.length?S.arch.messaging.map(l=>`- ${l}`).join('\n'):'- —';
+  const ints=S.arch.integrations.length?S.arch.integrations.map(l=>`- ${l}`).join('\n'):'- —';
+
+  return `# 02 — Architecture
+
+> Stack, estilo arquitetural e justificativa de cada dependência. Antes de adicionar QUALQUER tecnologia nova, justifique aqui (KISS).
+
+---
+
+<style>
+
+## Estilo Arquitetural
+
+**${nc(S.arch.style)}**
+
+${S.arch.scalability?`### Escalabilidade esperada\n${S.arch.scalability}`:''}
+
+</style>
+
+---
+
+<stack>
+
+## Stack
+
+### Linguagens
+${langs}
+
+### Frameworks
+${fwks}
+
+### Bancos de Dados
+${dbs}
+
+### Cache / Filas / Mensageria
+${msgs}
+
+</stack>
+
+---
+
+<integrations>
+
+## Integrações Externas
+
+${ints}
+
+> Toda integração externa exige tratamento de falha (timeout, retry com backoff, circuit breaker) e validação de webhook (HMAC) quando aplicável.
+
+</integrations>
+
+---
+
+<dependency_rationale>
+
+## Por que cada dependência existe?
+
+Para cada item da stack acima, responda em \`<thinking>\`: **"Isso resolve um problema real e atual, ou é over-engineering?"**
+
+- Monolito modular é a melhor escolha por padrão.
+- Microsserviços só se justificam com escala real e múltiplas equipes.
+- Cache (Redis) só quando há hot path mensurável.
+- Filas só quando há trabalho assíncrono de fato.
+
+Tecnologias adicionadas sem justificativa documentada devem ser questionadas pelo \`/agents/architect.md\` no próximo Code Review.
+
+</dependency_rationale>
+`;
+}
+
+function gAgentFile(a){
+  const reads=(a.arts||'').split(',').map(s=>s.trim()).filter(Boolean).map(f=>`- \`${f}\``).join('\n')||'- `/CLAUDE.md`\n- `/docs/01-product-spec.md`';
+  const isOrch=a.implicit&&!a.gitOnly;
+  const isGit=a.gitOnly;
+  const triggerNote=isOrch
+    ? 'Ponto de entrada padrão. É acionado em toda nova tarefa.'
+    : isGit
+      ? 'NUNCA acionado diretamente. Só pode ser invocado pelo Orquestrador após o Code Reviewer emitir "✅ APROVADO" e todos os testes passarem.'
+      : 'Acionado pelo Orquestrador quando a tarefa entra no domínio de responsabilidade abaixo.';
+
+  return `# Agente — ${a.name||'[NEEDS CLARIFICATION]'}
+
+<role>
+${triggerNote}
+</role>
+
+---
+
+<responsibilities>
+
+${a.resp||'[NEEDS CLARIFICATION]'}
+
+</responsibilities>
+
+---
+
+<reads_first>
+
+Antes de qualquer ação, este agente DEVE ler:
+
+${reads}
+
+</reads_first>
+
+---
+
+<style>
+
+${a.style||'[NEEDS CLARIFICATION]'}
+
+</style>
+
+---
+
+<mandatory_thinking>
+
+Antes de produzir qualquer saída (código, decisão, revisão), este agente DEVE abrir:
+
+\`\`\`
+<thinking>
+- Tarefa recebida:
+- Arquivos lidos:
+- Critério de aceite a validar (do /docs/03-roadmap.md):
+- Regras de /docs/04-security.md aplicáveis:
+- Plano de ação:
+</thinking>
+\`\`\`
+
+Sem \`<thinking>\` prévio, a saída deste agente é inválida.
+
+</mandatory_thinking>
+${isGit?`
+---
+
+<git_master_protocol>
+
+## Protocolo de Versionamento
+
+\`\`\`
+1. Implementação concluída
+2. /code-review → sem issues Crítico ou Alto
+3. /testar → todos os testes passando
+4. Code Reviewer emite: "✅ APROVADO — Git Master pode ser acionado"
+5. Orquestrador aciona Git Master
+
+❌ NUNCA commitar com testes falhando
+❌ NUNCA commitar com issue Crítico ou Alto aberto
+\`\`\`
+
+Conventional Commits obrigatório. Toda mensagem referencia a fase do \`/docs/03-roadmap.md\`.
+
+</git_master_protocol>
+`:''}`;
+}
 
 function gClaude(){
   const cmdTbl=S.cmds.list.map(c=>`| \`${c.name||'?'}\` | ${c.goal||'?'} |`).join('\n');
@@ -2149,15 +2430,38 @@ Versionamento: [Semantic Versioning](https://semver.org/lang/pt-BR/)
 ${phaseSections}
 `;}
 
-const GIT_FILES=['PR Template','.github/ISSUE_TEMPLATE/bug_report.md','.github/ISSUE_TEMPLATE/feature_request.md','CHANGELOG.md'];
-const GIT_GENS=[gPRTemplate,gBugReport,gFeatureRequest,gChangelog];
+// Manifesto unificado: cada entrada vira um arquivo no ZIP e uma aba no preview.
+// path = caminho final dentro do ZIP (com docs/ ou agents/ quando aplicável).
+function getManifest(){
+  const m=[
+    {path:'START.md',                       gen:gStart},
+    {path:'CLAUDE.md',                      gen:gClaude},
+    {path:'docs/01-product-spec.md',        gen:gSpec},
+    {path:'docs/02-architecture.md',        gen:gArchitecture},
+    {path:'docs/03-roadmap.md',             gen:gPlan},
+    {path:'docs/04-security.md',            gen:gSecurity},
+    {path:'docs/05-rules.md',               gen:gRules},
+    {path:'docs/06-hooks.md',               gen:gHooks},
+    {path:'docs/07-slash-commands.md',      gen:gCmds},
+  ];
+  if(S.meta.useGit===true){
+    m.push({path:'docs/08-changelog.md', gen:gChangelog});
+  }
+  // Um arquivo por agente ativo, em /agents/<slug>.md
+  for(const ag of S.agents.list){
+    const slug=slugifyAgent(ag);
+    m.push({path:`agents/${slug}.md`, gen:()=>gAgentFile(ag)});
+  }
+  if(S.meta.useGit===true){
+    m.push({path:'.github/pull_request_template.md',          gen:gPRTemplate});
+    m.push({path:'.github/ISSUE_TEMPLATE/bug_report.md',      gen:gBugReport});
+    m.push({path:'.github/ISSUE_TEMPLATE/feature_request.md', gen:gFeatureRequest});
+  }
+  return m;
+}
 
-function getActiveFiles(){
-  return S.meta.useGit===true ? [...FILES,...GIT_FILES] : [...FILES];
-}
-function getActiveGens(){
-  return S.meta.useGit===true ? [...[gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity],...GIT_GENS] : [gClaude,gSpec,gPlan,gAgents,gRules,gHooks,gCmds,gSecurity];
-}
+function getActiveFiles(){return getManifest().map(e=>e.path);}
+function getActiveGens(){return getManifest().map(e=>e.gen);}
 
 // ── URL HASH (compartilhar via link, sob demanda) ─────────────
 function stateToHash(){
