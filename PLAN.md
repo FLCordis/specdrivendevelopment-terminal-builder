@@ -1,103 +1,122 @@
+# PLAN.md — Refatoração SDD Terminal
+
 Leia o CLAUDE.md antes de qualquer coisa.
 
-Implemente a geração do arquivo CHANGELOG.md no SDD Terminal (index.html).
-Implementação 100% aditiva — nada existente é alterado.
+Refatoração de arquitetura e evolução do SDD Terminal para modularização, persistência robusta, exportação profissional, PWA offline e prompts com engenharia XML.
+
+Implementação **incremental** em 5 etapas, cada uma com seu commit atômico.
 
 ---
 
-## O que fazer
+## Princípios
 
-### 1. Criar a função gChangelog()
+- Visual, cores, classes CSS e UX existentes **não mudam**
+- Funções geradoras são **estendidas**, não substituídas
+- Cada etapa é commitada separadamente para permitir rollback granular
+- Validação manual via `python -m http.server` antes de cada commit
 
-Adicionar junto das outras funções geradoras (gClaude, gSpec, gPlan, etc.):
+---
 
-```javascript
-function gChangelog() {
-  if (!S.meta.useGit) return '';
-  const name = S.meta.name || 'NEEDS CLARIFICATION';
-  const phases = S.plan.phases;
+## Etapa 1 — Modularização
 
-  const phaseSections = phases.length
-    ? phases.map((ph, i) => {
-        const version = `0.${i + 1}.0`;
-        const label = ph.name || `Fase ${i + 1}`;
-        const goal = ph.goal || 'NEEDS CLARIFICATION';
-        const deadline = ph.deadline ? ` — ${ph.deadline}` : '';
-        const deliverables = ph.deliverables
-          ? ph.deliverables.split('\n').filter(Boolean).map(d => `- ${d.trim()}`).join('\n')
-          : '- NEEDS CLARIFICATION';
-        return `## [${version}]${deadline}\n### ${label}\n> ${goal}\n\n### Added\n${deliverables}`;
-      }).join('\n\n---\n\n')
-    : '## [0.1.0]\n### Added\n- NEEDS CLARIFICATION';
+**Arquivos novos:** `style.css`, `app.js`
 
-  return `# Changelog — ${name}
+**Mudanças:**
+- Extrair conteúdo de `<style>...</style>` (linhas 8-240 do index.html original) para `style.css`
+- Extrair conteúdo de `<script>...</script>` (linhas 358-2376) para `app.js`
+- `index.html` passa a importar via `<link rel="stylesheet" href="style.css">` e `<script defer src="app.js"></script>`
+- CDN do `lz-string` permanece no `<head>`
 
-Todas as mudanças notáveis são documentadas aqui.
-Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/)
-Versionamento: [Semantic Versioning](https://semver.org/lang/pt-BR/)
+**Critério:** abrir `index.html` via http.server e verificar que todas as etapas funcionam idênticas ao monolítico.
 
-> **Instrução para o Git Master:** a cada PR mergeado, mover os itens concluídos
-> de \`[Unreleased]\` para a versão correspondente com a data real de entrega.
+---
 
-***
+## Etapa 2 — Persistência via localStorage
 
-## [Unreleased]
+**Mudança no `app.js`:**
+- Substituir `scheduleHashUpdate()` chamado em `u()` e `li()` por `scheduleSave()` que escreve em `localStorage` (chave: `sdd-terminal-state-v1`)
+- `init()`: tentar carregar de `localStorage` primeiro; se houver `#v1=` no hash, hash sobrescreve (link compartilhado tem prioridade)
+- Manter `stateToHash()` para uso exclusivo de `copyLink()` (gera URL comprimida sob demanda)
+- `clearAll()` também limpa `localStorage`
 
-### Added
-### Changed
-### Fixed
-### Security
+**Critério:** preencher campos → recarregar página → estado preservado. Limpar tudo → recarregar → estado vazio.
 
-***
+---
 
-${phaseSections}
-`;
-}
+## Etapa 3 — Export ZIP (JSZip)
+
+**Mudanças:**
+- Adicionar CDN do JSZip no `<head>` do index.html: `<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>`
+- Nova função `downloadZip()` em `app.js`: itera `getActiveFiles()` + `getActiveGens()`, cria um ZIP com cada arquivo gerado, faz download como `{nomeProjeto}-sdd.zip`
+- Novo botão "📦 Baixar Pacote (.zip)" no footer da sidebar (entre "Para o Time" e "Copiar Link"), classe `.sb-btn`
+- Adicionar botão "📥 ZIP" também na pvbar (`<aside id="pv">`) e na pvo-header do `#pv-overlay` mobile — mantém downloads individuais nas abas
+
+**Critério:** clicar no botão baixa arquivo `.zip` válido contendo todos os MDs gerados.
+
+---
+
+## Etapa 4 — PWA (Service Worker + Manifest)
+
+**Arquivos novos:** `manifest.json`, `sw.js`
+
+**`manifest.json`:**
+- `name`: "SDD Terminal", `short_name`: "SDD"
+- `start_url`: "./", `display`: "standalone", `theme_color`: "#00ff41", `background_color`: "#070c07"
+- `icons`: ícone SVG inline data-URI (verde terminal — gerar via data URL para zero arquivos binários)
+
+**`sw.js` (cache-first com versionamento):**
+```js
+const CACHE_VERSION = 'sdd-v1';
+const ASSETS = ['./','./index.html','./style.css','./app.js','./manifest.json',
+  'https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js',
+  'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
+// install: cache ASSETS  | activate: delete old caches  | fetch: cache-first
 ```
 
-### 2. Adicionar CHANGELOG.md ao array FILES
+**`index.html`:**
+- Adicionar `<link rel="manifest" href="manifest.json">`
+- Adicionar `<meta name="theme-color" content="#00ff41">`
 
-Localizar a constante:
-```javascript
-const FILES = ['CLAUDE.md', 'SPEC.md', 'PLAN.md', 'AGENTS.md', 'RULES.md', 'HOOKS.md', 'SLASH-COMMANDS.md', 'SECURITY.md'];
-```
+**`app.js`:**
+- Nova função `registerSW()` chamada em `init()`: registra `/sw.js` se `'serviceWorker' in navigator`
 
-Substituir por lógica condicional que adiciona CHANGELOG.md quando Git estiver ativo:
+**Critério:** primeira visita carrega; segunda visita funciona com rede desligada.
 
-```javascript
-// Em vez de alterar FILES diretamente, criar função getFiles():
-function getFiles() {
-  const base = ['CLAUDE.md','SPEC.md','PLAN.md','AGENTS.md','RULES.md','HOOKS.md','SLASH-COMMANDS.md','SECURITY.md'];
-  return S.meta.useGit ? [...base, 'CHANGELOG.md'] : base;
-}
-```
+---
 
-Substituir toda referência a `FILES` no código por `getFiles()`.
-As referências existentes são: `renderPVOverlay()`, `renderPVTabs()`, `generateAll()`, `gCmds()` (onde lista os arquivos).
-Verificar todas as ocorrências antes de substituir.
+## Etapa 5 — Engenharia de Prompt (XML + Few-Shot)
 
-### 3. Adicionar gChangelog() ao array de geradores
+**Estado:**
+- Adicionar `examples: ''` ao `S.rules` em todos os pontos de inicialização e reset (`init`, `clearAll`, `S = {...}`)
 
-Localizar onde os geradores são chamados em sequência (dentro de renderPVTabs, renderPVOverlay e generateAll):
-```javascript
-const gens = [gClaude, gSpec, gPlan, gAgents, gRules, gHooks, gCmds, gSecurity];
-```
+**UI:**
+- Novo campo `<textarea>` em `sRules()`, dentro de `.advanced-only`, label "Exemplos de Código (Few-Shot)"
+- `oninput="u('rules.examples', this.value)"`
+- Placeholder: exemplos de código que o Claude deve seguir como referência
 
-Substituir por:
-```javascript
-const gens = [gClaude, gSpec, gPlan, gAgents, gRules, gHooks, gCmds, gSecurity, ...(S.meta.useGit ? [gChangelog] : [])];
-```
+**Geradores refatorados (somente CLAUDE.md, AGENTS.md, RULES.md):**
 
-### 4. Reatividade
+`gClaude()`:
+- Envolver seções em `<project_scope>`, `<architecture>`, `<sources_of_truth>`, `<rules_for_claude>`, `<engineering_principles>`, `<workflow>`, `<slash_commands>`
+- Se `S.rules.examples`: incluir bloco `<examples>...</examples>`
+- Adicionar ao final: `<thinking_instruction>Antes de gerar qualquer código, use a tag <thinking>...</thinking> para raciocinar sobre o problema, validar contra SPEC.md/RULES.md/SECURITY.md, e só então produzir o código.</thinking_instruction>`
 
-A função `setUseGit()` já dispara `renderStep()` e `schedPV()`, então o CHANGELOG.md vai aparecer/desaparecer automaticamente quando o usuário alternar Sim/Não na pergunta de Git. Nenhuma alteração adicional necessária na reatividade.
+`gAgents()`:
+- Envolver Orquestrador em `<orchestrator>`, especialistas em `<specialists>`, Git Master em `<git_master>`, instruções de uso em `<usage>`
+
+`gRules()`:
+- Envolver princípios em `<global_principles>`, código em `<code_rules>`, arquitetura em `<architecture_rules>`, banco em `<database_rules>`, testes em `<test_rules>`, segurança em `<security_rules>`, performance em `<performance_rules>`, docs em `<documentation_rules>`, commits em `<commit_rules>`, PR em `<pr_review_rules>`, fluxo Git em `<git_workflow>`
+
+**Não alterar:** `gSpec`, `gPlan`, `gHooks`, `gCmds`, `gSecurity`, `gChangelog`, `gPRTemplate`, `gBugReport`, `gFeatureRequest` — permanecem Markdown puro.
+
+**Critério:** XML válido aninhado dentro de blocos markdown; preview continua legível; abas continuam mostrando o conteúdo correto.
 
 ---
 
 ## Regras
-- Zero alteração em funções existentes além das substituições de FILES descritas acima
-- gChangelog() retorna string vazia se !S.meta.useGit (nunca retorna null)
-- Se S.plan.phases estiver vazio, gerar estrutura mínima com NEEDS CLARIFICATION
-- Testar: marcar Git como Sim → CHANGELOG.md aparece nas abas do preview
-- Testar: desmarcar Git → CHANGELOG.md some das abas
-- Testar: exportar JSON com Git ativo → reimportar → CHANGELOG.md continua aparecendo
+
+- Cada etapa = 1 commit semântico
+- Após cada etapa, abrir manualmente via `python -m http.server` e validar smoke test
+- Visual idêntico ao original em todas as etapas
+- Nenhuma classe CSS removida ou renomeada
+- Nenhum comportamento do `S` state quebrado
