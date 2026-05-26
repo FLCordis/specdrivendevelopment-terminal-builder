@@ -511,22 +511,24 @@ function sQuality(){
 
 function sPlan(){
   const p=S.plan;
-  return hdr2(4,'PLANO DE ENTREGAS',['Divida o projeto em fases pequenas e revisáveis.','Comece pelo mínimo que já entrega valor real.','Não superengenheirize cedo — resolva o problema de forma sustentável.'])+`
-  <div class="info"><strong style="color:var(--g)">Sugestão:</strong> Fase 1 = login + fluxo principal. Fase 2 = funcionalidades secundárias. Fase 3 = performance, observabilidade e hardening.</div>
+  return hdr2(4,'PLANO DE ENTREGAS — MILESTONES',['Cada fase é um Milestone com Critérios de Aceite rigorosos.','O agente IA NÃO avança para o próximo milestone enquanto os critérios não estiverem 100% verdes.','Comece pelo mínimo que já entrega valor real — KISS.'])+`
+  <div class="info"><strong style="color:var(--g)">Sugestão:</strong> Milestone 1 = login + fluxo principal. Milestone 2 = funcionalidades secundárias. Milestone 3 = performance, observabilidade e hardening.<br><br><strong>Critérios de Aceite</strong> devem ser verificáveis (ex: "todos os testes E2E passando", "Code Reviewer aprovou sem Crítico/Alto", "endpoint X responde em &lt;200ms").</div>
   <div id="phases">${p.phases.map((ph,i)=>phItem(ph,i)).join('')}</div>
   <button class="btn btn-sm" onclick="addPh()" style="margin-top:6px">+ Adicionar fase</button>
   ${nav()}`;
 }
 
 function phItem(ph,i){
-  return`<div class="li"><div class="lih"><span class="lit">FASE ${i+1}: ${e(ph.name||'Nova Fase')}</span><button class="btn btn-sm btn-d" onclick="remPh(${i})">✕</button></div>
+  return`<div class="li"><div class="lih"><span class="lit">MILESTONE ${i+1}: ${e(ph.name||'Novo Milestone')}</span><button class="btn btn-sm btn-d" onclick="remPh(${i})">✕</button></div>
   <div class="g2">
-    <div class="fg"><label>Nome</label><input type="text" value="${e(ph.name||'')}" placeholder="Ex: MVP, Versão 2.0" oninput="li('plan.phases',${i},'name',this.value)"></div>
+    <div class="fg"><label>Nome do milestone</label><input type="text" value="${e(ph.name||'')}" placeholder="Ex: MVP, Versão 2.0" oninput="li('plan.phases',${i},'name',this.value)"></div>
     <div class="fg"><label>Prazo estimado</label><input type="text" value="${e(ph.deadline||'')}" placeholder="Ex: 6 semanas" oninput="li('plan.phases',${i},'deadline',this.value)"></div>
   </div>
   <div class="fg"><label>Objetivo</label><input type="text" value="${e(ph.goal||'')}" placeholder="Ex: Fluxo principal funcionando ponta a ponta" oninput="li('plan.phases',${i},'goal',this.value)"></div>
   <div class="fg"><label>O que será entregue</label><textarea style="min-height:50px" placeholder="Ex: Tela de login, cadastro, listagem e API de pedido" oninput="li('plan.phases',${i},'deliverables',this.value)">${e(ph.deliverables||'')}</textarea></div>
-  <div class="fg"><label>Critério de pronto</label><input type="text" value="${e(ph.done||'')}" placeholder="Ex: Testes passando, PO aprovou, deploy em staging" oninput="li('plan.phases',${i},'done',this.value)"></div></div>`;
+  <div class="fg"><label>Critérios de Aceite (Definition of Done)</label>
+  ${transl('Lista verificável. O agente IA NÃO avança de milestone enquanto qualquer item estiver pendente.')}
+  <textarea style="min-height:70px" placeholder="Ex:\n- Todos os testes unitários e E2E passando\n- Code Reviewer aprovou sem issues Crítico/Alto\n- Endpoint /login responde em < 200ms (P95)\n- Deploy em staging validado pelo PO" oninput="li('plan.phases',${i},'done',this.value)">${e(ph.done||'')}</textarea></div></div>`;
 }
 
 function sAgents(){
@@ -840,23 +842,28 @@ function generateAll(){
 function openTeamModal(){
   const nm=S.meta.name||'[PROJETO]';
   document.getElementById('team-prompt').textContent=
-`Olá! Segue a documentação do projeto "${nm}".
+`Olá! Segue o pacote agentic-bootstrap do projeto "${nm}".
 
-Leia na ordem:
-1. CLAUDE.md  → visão geral, regras e contexto
-2. SPEC.md    → requisitos funcionais e não-funcionais
-3. PLAN.md    → plano de implementação em fases
-4. SECURITY.md → regras de segurança por domínio (obrigatório antes de implementar auth, dados ou integrações)
+PONTO DE ENTRADA: leia START.md primeiro — ele orquestra a ordem de leitura.
+
+Ordem de leitura (definida em START.md):
+1. /CLAUDE.md                  → regras globais + <thinking> obrigatório
+2. /docs/01-product-spec.md    → problema, stakeholders, casos de uso
+3. /docs/02-architecture.md    → stack e justificativa de dependências
+4. /docs/03-roadmap.md         → milestones e Critérios de Aceite
+5. /docs/04-security.md        → threat model e gates obrigatórios
+6. /docs/05-rules.md           → padrões de código e PR review
+7. /agents/                    → um arquivo .md por especialista
 
 Instruções:
-- Leia os quatro arquivos antes de escrever qualquer código.
+- Antes de QUALQUER mudança, abra <thinking>...</thinking> (regra #0 em CLAUDE.md).
 - Campos [NEEDS CLARIFICATION] precisam ser discutidos antes de implementar.
-- Antes de qualquer componente com login, dados de usuário ou integrações: consulte SECURITY.md.
-- Antes de criar ou alterar models/queries: acione o agente DBA.
-- Use os slash commands em .claude/commands/ (/sec-review, /db-review, /validar, etc.).
-- O Orquestrador em AGENTS.md coordena os especialistas automaticamente.
+- NÃO avance de milestone enquanto os <acceptance_criteria> da fase atual não estiverem 100% verdes.
+- Auth, dados de usuário ou integrações: consulte /docs/04-security.md.
+- Models/queries: acione /agents/dba.md.
+- Slash commands em .claude/commands/ (/sec-review, /db-review, /validar, etc.).
 
-Comece pela Fase 1 do PLAN.md após resolver os [NEEDS CLARIFICATION].`;
+Comece pela Primeira Ação descrita em START.md.`;
   document.getElementById('team-modal').style.display='flex';
 }
 function closeTeamModal(){document.getElementById('team-modal').style.display='none';}
@@ -1227,7 +1234,29 @@ function gClaude(){
   return `# CLAUDE.md — Constituição do Projeto
 
 > Leia este arquivo antes de qualquer interação.
-> Você é o **Orquestrador / Team Lead**: leia SPEC.md, PLAN.md e SECURITY.md, entenda a tarefa, decida qual agente especialista acionar e garanta conformidade com RULES.md e SECURITY.md.
+> Você é o **Orquestrador / Team Lead**: leia /docs/01-product-spec.md, /docs/03-roadmap.md e /docs/04-security.md, entenda a tarefa, decida qual agente especialista acionar e garanta conformidade com /docs/05-rules.md e /docs/04-security.md.
+
+---
+
+<mandatory_thinking>
+
+## Regra #0 — \`<thinking>\` é OBRIGATÓRIO
+
+Antes de QUALQUER alteração de código, arquitetura ou arquivo, você DEVE abrir:
+
+\`\`\`
+<thinking>
+- Objetivo da ação:
+- Arquivos lidos (/docs e /agents):
+- Agente especialista acionado:
+- Critério de aceite que será validado (do /docs/03-roadmap.md):
+- Riscos de segurança aplicáveis (/docs/04-security.md):
+</thinking>
+\`\`\`
+
+**Saídas sem \`<thinking>\` prévio são inválidas e devem ser refeitas.** Esta regra não tem exceção — vale para correções triviais, refatorações e mudanças "óbvias".
+
+</mandatory_thinking>
 
 ---
 
@@ -1439,21 +1468,48 @@ ${S.rules.security?'\n'+S.rules.security:''}
 
 function gPlan(){
   const phs=S.plan.phases.length
-    ?S.plan.phases.map((ph,i)=>`
-## Fase ${i+1}: ${ph.name||'[NEEDS CLARIFICATION]'}
+    ?S.plan.phases.map((ph,i)=>{
+      const doneLines=(ph.done||'').split('\n').map(s=>s.trim()).filter(Boolean);
+      const userCriteria=doneLines.length
+        ? doneLines.map(l=>l.startsWith('-')||l.startsWith('*')?l:`- ${l}`).join('\n')
+        : '- [NEEDS CLARIFICATION: defina critérios verificáveis]';
+      return `
+## Milestone ${i+1}: ${ph.name||'[NEEDS CLARIFICATION]'}
 ${ph.deadline?`**Prazo:** ${ph.deadline}\n`:''}
 **Objetivo:** ${ph.goal||'[NEEDS CLARIFICATION]'}
 
 **Entregáveis:**
 ${ph.deliverables?ph.deliverables.split('\n').map(l=>`- ${l}`).join('\n'):'- [NEEDS CLARIFICATION]'}
 
-**Critério de Done:** ${ph.done||'[NEEDS CLARIFICATION]'}
-`).join('\n---\n')
+<acceptance_criteria milestone="${i+1}">
+
+Este milestone só é considerado CONCLUÍDO quando TODOS os critérios abaixo estiverem verdes:
+
+${userCriteria}
+- Code Reviewer aprovou sem issues Crítico ou Alto em aberto
+- Todos os testes automatizados (\`/testar\`) passando
+- Gates de \`/docs/04-security.md\` aplicáveis foram validados${S.meta.useGit?'\n- Git Master criou PR com referência a este milestone':''}
+
+</acceptance_criteria>
+`;
+    }).join('\n---\n')
     :'> [NEEDS CLARIFICATION]';
 
-  return `# PLAN.md — Plano de Implementação
+  return `# 03 — Roadmap
 
-> Atualizar ao concluir cada fase. Tarefas pequenas e revisáveis.
+> Sequência rigorosa de milestones. Atualizar ao concluir cada um.
+
+<phase_gate>
+
+## Regra de Avanço
+
+**É PROIBIDO iniciar o Milestone N+1 enquanto qualquer item dos \`<acceptance_criteria>\` do Milestone N estiver pendente, com teste falhando ou com issue Crítico/Alto aberto pelo Code Reviewer.**
+
+Se um milestone estiver bloqueado: abra \`<thinking>\` descrevendo o bloqueio e devolva o controle ao usuário humano.
+
+</phase_gate>
+
+---
 
 ---
 
