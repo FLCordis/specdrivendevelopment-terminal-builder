@@ -380,7 +380,7 @@ function renderPVOverlay(){
   document.getElementById('pvtabs2').innerHTML=files.map((f,i)=>
     `<div class="pvt${i===pvTab?' active':''}" title="${f}" onclick="switchPV2(${i})">${f}</div>`).join('');
   const md=(gens[pvTab]||(() => ''))();
-  document.getElementById('pvc2').innerHTML=`<pre>${hlNC(md)}</pre>`;
+  document.getElementById('pvc2').innerHTML=`<pre>${hl(md)}</pre>`;
 }
 function switchPV2(i){pvTab=i;renderPVOverlay();}
 function copyOne2(){navigator.clipboard.writeText(document.getElementById('pvc2').innerText).then(()=>toast('Copiado!'));}
@@ -946,12 +946,22 @@ function schedPV(){
   clearTimeout(pvTimer); pvTimer=setTimeout(renderPV,400);
 }
 function hlNC(md){
-  return md.replace(/\[NEEDS CLARIFICATION[^\]]*\]/g,s=>`<span style="color:#ff5555;font-weight:bold">${s}</span>`);
+  return md.replace(/\[NEEDS CLARIFICATION[^\]]*\]/g,s=>`<span class="hl-nc">${s}</span>`);
+}
+// Syntax highlight discreto: escapa HTML primeiro, depois aplica spans semânticos.
+// Ordem: NC → tags XML escapadas → `code` inline → headings markdown.
+function hl(md){
+  let s=String(md==null?'':md).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s=s.replace(/\[NEEDS CLARIFICATION[^\]]*\]/g,m=>`<span class="hl-nc">${m}</span>`);
+  s=s.replace(/&lt;\/?[a-zA-Z][\w-]*(?:\s[^&]*?)?\/?&gt;/g,m=>`<span class="hl-xml">${m}</span>`);
+  s=s.replace(/`([^`\n]+)`/g,(m,c)=>`<span class="hl-code">\`${c}\`</span>`);
+  s=s.replace(/^(#{1,6}\s.*)$/gm,m=>`<span class="hl-h">${m}</span>`);
+  return s;
 }
 function renderPV(){
   const gens=getActiveGens();
   const md=(gens[pvTab]||(() => ''))();
-  document.getElementById('pvc').innerHTML=`<pre>${hlNC(md)}</pre>`;
+  document.getElementById('pvc').innerHTML=`<pre>${hl(md)}</pre>`;
 }
 function generateAll(){
   renderPV();
