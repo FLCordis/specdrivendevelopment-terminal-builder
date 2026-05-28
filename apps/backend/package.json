@@ -1,0 +1,12 @@
+{
+  "name": "sdd-terminal-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}
