@@ -3,12 +3,14 @@
 // e materializa o manifest legado para servir de baseline de regressão.
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const state = require('../apps/backend/test/fixtures/state.full.json');
 const { legacyManifest } = await import('../apps/backend/lib/generators/legacy-manifest.js');
 
-const OUT = 'apps/backend/test/fixtures/golden';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const OUT = join(__dirname, '../apps/backend/test/fixtures/golden');
 for (const { path, content } of legacyManifest(state)) {
   const full = join(OUT, path);
   mkdirSync(dirname(full), { recursive: true });
