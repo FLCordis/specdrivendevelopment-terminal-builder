@@ -89,7 +89,12 @@ Spec:      .spec-meter, .spec-meter-bar, .spec-meter-fill, .spec-meter-label
 
 ## Regra de ouro
 
-**Toda implementação é 100% aditiva.** Nenhuma função existente deve ser alterada — apenas estendida. Nenhum comportamento atual quebra. Ler o PLAN.md antes de qualquer implementação.
+**Migração controlada com paridade verificada.** Mudanças que extraem ou movem
+lógica existente (ex.: geradores `g*()` saindo de `app.js` para o backend) são
+permitidas, desde que: (1) verificadas contra *golden files* — o output gerado
+deve ser idêntico ao snapshot anterior à mudança; (2) cobertas por teste de
+regressão que roda antes do merge. Funcionalidade nova é aditiva por padrão.
+Ler o design ativo em `docs/plans/` antes de qualquer implementação.
 
 ## Variáveis CSS do design system
 
