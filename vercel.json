@@ -3,12 +3,12 @@
   "buildCommand": "echo 'no build needed'",
   "outputDirectory": "apps/frontend",
   "functions": {
-    "apps/backend/api/*.js": {
+    "api/*.js": {
       "includeFiles": "apps/backend/lib/**"
     }
   },
   "routes": [
-    { "src": "/api/(.*)", "dest": "apps/backend/api/$1" },
+    { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
