@@ -5,10 +5,10 @@
 **SDD Terminal** é uma ferramenta web para gerar documentação de software orientada a agentes de IA (CLAUDE.md, SPEC.md, PLAN.md, AGENTS.md, RULES.md, HOOKS.md, SECURITY.md, SLASH-COMMANDS.md, CHANGELOG.md) para uso com Claude Code.
 
 - **Stack:** front HTML + CSS + JavaScript vanilla puro; backend Node ESM (Vercel Functions) com `jszip`
-- **Dependências externas (via CDN no front):** `lz-string` (compressão de URL para "Copiar Link")
+- **Dependências externas:** front sem CDNs (lz-string/jszip foram removidos na migração); `jszip` é dependência npm do backend
 - **Deploy:** Vercel — dois projetos independentes: `apps/frontend` (casca estática) + `apps/backend` (Vercel Functions, lógica de geração oculta)
 - **Funciona online:** a geração de arquivos requer o backend (o shell PWA ainda cacheia assets estáticos, mas a geração em si é online)
-- **Persistência:** `localStorage` (autosave em cada input). `window.location.hash` é usado **apenas sob demanda** ao clicar em "Copiar Link" (compressão via lz-string)
+- **Persistência:** `localStorage` (autosave em cada input). A geração/ download dos arquivos é feita via `POST /api/*` (o preview ao vivo e o "Copiar Link"/hash foram removidos na migração)
 
 ## Estrutura do projeto
 
@@ -32,22 +32,21 @@ apps/frontend/app.js
 ├── BOOT          init(), renderFooter(), checkMobile(), registerSW()
 ├── RENDER        render(), renderSB(), renderStep(), renderBotNav()
 ├── ETAPAS        sMeta(), sDomain(), sArch(), sQuality(), sPlan(), sAgents(), sRules(), sCmds(), sReview()
-├── FETCH         downloadZip() → POST /api/package; copyLink() → lz-string sob demanda
+├── FETCH         generate() → POST /api/generate; downloadZip() → POST /api/package; renderFileList()
 └── UTILS         u(), li(), tags(), e(), opts(), toast(), exportJSON(), importJSON()
 ```
 
-Os geradores vivem em `apps/backend/lib/generators/`:
+Os geradores vivem todos em um único módulo `apps/backend/lib/generators/index.js` (migrados verbatim de `app.js`, agora funções puras de `state`):
 ```
-apps/backend/lib/generators/
-├── claude.js      gClaude()
-├── spec.js        gSpec()
-├── plan.js        gPlan()
-├── agents.js      gAgents()
-├── rules.js       gRules()
-├── hooks.js       gHooks()
-├── cmds.js        gCmds()
-├── security.js    gSecurity()
-└── changelog.js   gChangelog()
+apps/backend/lib/
+├── generators/
+│   ├── index.js            gClaude, gSpec, gPlan, gAgents, gRules, gHooks, gCmds,
+│   │                       gSecurity, gChangelog, gStart, gArchitecture, gAgentFile,
+│   │                       gPRTemplate, gBugReport, gFeatureRequest + helpers (nc, ls, slugifyAgent)
+│   └── legacy-manifest.js  espelha o getManifest() antigo (usado p/ golden files)
+├── scaffold/               buildManifest() → árvore .claude/ + .specs/ (claude.js, specs.js, start.js, index.js)
+├── validate.js             validateState() + normalizeState()
+└── cors.js                 applyCors()
 ```
 
 ## Padrões obrigatórios
@@ -65,7 +64,7 @@ Tanto `u()` quanto `li()` disparam autosave em `localStorage` automaticamente (d
 
 ### Renderização
 - Após qualquer mudança de estado: `render()` já é chamado pelos handlers
-- Para forçar re-render do preview: `schedPV()`
+- Não há mais preview ao vivo no front — a geração de arquivos acontece no backend via `generate()`/`downloadZip()`
 - Nunca manipular DOM diretamente fora das funções de render
 
 ### Git condicional
