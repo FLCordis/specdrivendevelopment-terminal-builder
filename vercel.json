@@ -4,7 +4,7 @@
   "outputDirectory": "apps/frontend",
   "functions": {
     "apps/backend/api/*.js": {
-      "runtime": "@vercel/node"
+      "includeFiles": "apps/backend/lib/**"
     }
   },
   "routes": [
