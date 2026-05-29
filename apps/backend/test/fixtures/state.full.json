@@ -1,0 +1,272 @@
+{
+  "meta": {
+    "name": "Plataforma de Agendamento Médico",
+    "type": "app-web",
+    "stage": "mvp",
+    "audience": "Pacientes e clínicas médicas",
+    "pitch": "Pacientes agendam consultas online em segundos, sem precisar ligar para a clínica.",
+    "kpis": [
+      "Reduzir tempo de agendamento de 2h para 2min",
+      "90% dos slots preenchidos via app em 3 meses",
+      "NPS > 70 após lançamento"
+    ],
+    "useGit": true
+  },
+  "domain": {
+    "problem": "Clínicas perdem pacientes porque o agendamento por telefone é lento e sujeito a erros. Pacientes desistem ao esperar na linha ou fora do horário comercial.",
+    "objectives": [
+      "Permitir agendamento online 24/7 sem intermediário humano",
+      "Reduzir no-shows com lembretes automáticos por e-mail e SMS",
+      "Oferecer painel administrativo para a clínica gerenciar agenda e histórico"
+    ],
+    "stakeholders": [
+      {
+        "name": "Paciente",
+        "desc": "Usuário final que precisa marcar consultas",
+        "goals": "Agendar, reagendar e cancelar consultas com facilidade e receber confirmações"
+      },
+      {
+        "name": "Recepcionista",
+        "desc": "Funcionária da clínica que gerencia a agenda",
+        "goals": "Ver agenda do dia, confirmar ou cancelar consultas e visualizar histórico do paciente"
+      },
+      {
+        "name": "Médico",
+        "desc": "Profissional que atende os pacientes",
+        "goals": "Consultar agenda pessoal, adicionar bloqueios e ver prontuário resumido"
+      }
+    ],
+    "useCases": [
+      {
+        "title": "Agendar consulta",
+        "actor": "Paciente",
+        "desc": "Paciente escolhe especialidade, médico, data e horário disponível e confirma o agendamento"
+      },
+      {
+        "title": "Gerenciar agenda",
+        "actor": "Recepcionista",
+        "desc": "Recepcionista visualiza, confirma, reagenda ou cancela consultas do dia"
+      },
+      {
+        "title": "Bloquear horário",
+        "actor": "Médico",
+        "desc": "Médico adiciona bloqueios na própria agenda (férias, treinamentos) sem interferir na agenda de outros"
+      }
+    ],
+    "nonGoals": [
+      "Prontuário eletrônico completo (fora do escopo do MVP)",
+      "Integração com planos de saúde e convênios",
+      "Telemedicina / videoconsulta"
+    ],
+    "nfrs": [
+      "Tempo de resposta da API < 300ms (P95) em condições normais",
+      "Disponibilidade mínima de 99,5% (SLA mensal)",
+      "Conformidade com LGPD: dados pessoais criptografados em repouso e em trânsito"
+    ]
+  },
+  "arch": {
+    "languages": ["TypeScript"],
+    "frameworks": ["Next.js", "NestJS", "Prisma"],
+    "databases": ["PostgreSQL", "Redis"],
+    "messaging": ["Bull"],
+    "style": "monolito-modular",
+    "integrations": ["SendGrid (e-mail)", "Twilio (SMS)", "Google Calendar API"],
+    "scalability": "Até 10 mil consultas/mês no MVP. Redis para cache de slots disponíveis. Bull para filas de notificação assíncrona."
+  },
+  "quality": {
+    "testTypes": ["Unitário", "Integração", "E2E"],
+    "testTools": ["Jest", "Supertest", "Playwright"],
+    "obs": "Cobertura mínima de 80% nas camadas de serviço. Testes E2E cobrem fluxo de agendamento ponta a ponta.",
+    "envs": ["development", "staging", "production"],
+    "cicd": "GitHub Actions: lint + testes unitários em todo PR. Deploy automático em staging após merge na main. Deploy em produção manual via workflow dispatch.",
+    "security": "Autenticação JWT em HttpOnly cookie. RBAC para separar perfis (paciente, recepcionista, médico, admin). Rate limiting em endpoints de autenticação.",
+    "secChecks": ["sec-login", "sec-lgpd", "sec-roles", "sec-cripto", "sec-logs"]
+  },
+  "plan": {
+    "phases": [
+      {
+        "name": "MVP — Agendamento Básico",
+        "goal": "Usuário consegue se cadastrar, fazer login e agendar uma consulta do início ao fim",
+        "deliverables": "Autenticação (JWT + refresh token)\nCadastro de paciente e médico\nListagem de slots disponíveis\nCriação e cancelamento de agendamento\nE-mail de confirmação via SendGrid",
+        "done": "- Todos os testes unitários e de integração passando (cobertura ≥ 80%)\n- Fluxo de agendamento E2E validado no Playwright\n- Code Reviewer aprovou sem issues Crítico ou Alto\n- Deploy em staging validado pela recepcionista (smoke test manual)\n- Git Master criou PR referenciando este milestone",
+        "deadline": "6 semanas"
+      },
+      {
+        "name": "Notificações & Painel Admin",
+        "goal": "Reduzir no-shows com lembretes automáticos e oferecer painel de gestão para a clínica",
+        "deliverables": "Fila Bull para envio de lembretes (e-mail + SMS)\nCron job de lembrete 24h antes da consulta\nPainel admin: listagem, filtros e cancelamento em lote\nRelatório de ocupação semanal em PDF",
+        "done": "- Lembretes disparados corretamente em ambiente staging (testes de integração com mock SendGrid/Twilio)\n- Painel admin funcional para recepcionista testar no staging\n- Nenhum dado pessoal exposto nos logs (auditoria de PII)\n- Code Reviewer aprovou sem issues Crítico ou Alto\n- Git Master criou PR referenciando este milestone",
+        "deadline": "4 semanas"
+      },
+      {
+        "name": "Hardening & GA",
+        "goal": "Garantir confiabilidade, segurança e performance para lançamento em produção",
+        "deliverables": "Rate limiting e proteção contra brute force\nAuditoria de segurança (OWASP Top 10)\nOtimização de queries com índices revisados pelo DBA\nMonitoramento com alertas (Sentry + UptimeRobot)\nDocumentação OpenAPI finalizada",
+        "done": "- Auditoria OWASP Top 10 concluída sem itens Crítico/Alto\n- Load test: 500 usuários simultâneos sem degradação > 10%\n- Cobertura de testes ≥ 85% em todas as camadas\n- Runway de logs limpo (sem PII)\n- Code Reviewer aprovou sem issues Crítico ou Alto\n- Git Master criou PR de release referenciando este milestone",
+        "deadline": "3 semanas"
+      }
+    ]
+  },
+  "agents": {
+    "list": [
+      {
+        "name": "Orquestrador / Team Lead",
+        "icon": "orchestrator",
+        "resp": "Lê CLAUDE.md, SPEC.md, PLAN.md e RULES.md antes de tudo. Decide qual agente especialista acionar e garante conformidade com regras, escopo e segurança.",
+        "arts": "CLAUDE.md, SPEC.md, PLAN.md, RULES.md, SECURITY.md",
+        "style": "Explica o que vai fazer, qual agente acionou e por quê. Faz checagem final antes de entregar.",
+        "implicit": true
+      },
+      {
+        "name": "Arquiteto",
+        "icon": "architect",
+        "resp": "Define e valida a arquitetura, revisa SPEC e PLAN. Aplica SOLID, KISS, DRY. Questiona complexidade desnecessária.",
+        "arts": "SPEC.md, PLAN.md, RULES.md, SECURITY.md",
+        "style": "Explica trade-offs, alerta sobre over-engineering, propõe a solução mais simples que funciona"
+      },
+      {
+        "name": "Backend",
+        "icon": "backend",
+        "resp": "Implementa APIs, regras de negócio e integrações. Segue clean code, SOLID e as regras de segurança do SECURITY.md.",
+        "arts": "SPEC.md, RULES.md, PLAN.md, SECURITY.md",
+        "style": "Código limpo, testável, seguro. Explica decisões. Propõe testes junto com a implementação"
+      },
+      {
+        "name": "Frontend",
+        "icon": "frontend",
+        "resp": "Implementa telas, componentes e fluxos de UI com foco em UX, performance e acessibilidade.",
+        "arts": "SPEC.md, RULES.md, SECURITY.md",
+        "style": "Foca em UX, acessibilidade, lazy loading e boas práticas de segurança frontend"
+      },
+      {
+        "name": "QA",
+        "icon": "qa",
+        "resp": "Cria e revisa testes, valida critérios de entrega, verifica edge cases e cobertura.",
+        "arts": "SPEC.md, PLAN.md, RULES.md",
+        "style": "Focado em cobertura, edge cases, testes de regressão e automação"
+      },
+      {
+        "name": "DevOps",
+        "icon": "devops",
+        "resp": "Configura CI/CD, ambientes, monitoramento, escalabilidade e infraestrutura.",
+        "arts": "HOOKS.md, RULES.md, SECURITY.md",
+        "style": "Focado em automação, segurança de infra, observabilidade e zero-downtime deploy"
+      },
+      {
+        "name": "DBA (Banco de Dados)",
+        "icon": "dba",
+        "resp": "Modela o banco, define índices, constraints, relacionamentos e estratégia de queries. Previne N+1, otimiza performance e define estratégia de cache e paginação.",
+        "arts": "SPEC.md, RULES.md, PLAN.md",
+        "style": "Focado em modelagem correta, performance de queries, integridade de dados e escalabilidade do banco"
+      },
+      {
+        "name": "Code Reviewer",
+        "icon": "reviewer",
+        "resp": "Revisão obrigatória após qualquer /implementar. Analisa qualidade, segurança, performance, manutenibilidade e conformidade com SPEC, RULES e SECURITY. Bloqueia merge se encontrar problemas críticos.",
+        "arts": "SPEC.md, RULES.md, SECURITY.md, PLAN.md",
+        "style": "Criterioso e objetivo. Aponta problemas com severidade (Crítico/Alto/Médio/Baixo), explica o motivo e sugere a correção exata. Nunca aprova código com issue Crítico ou Alto sem resolução."
+      },
+      {
+        "name": "Git Master",
+        "icon": "git",
+        "resp": "Responsável exclusivo por commits, branches e PRs. NUNCA é chamado diretamente — só pode ser acionado pelo Orquestrador após o Code Reviewer emitir aprovação explícita (sem issues Crítico/Alto + todos os testes passando).",
+        "arts": "SPEC.md, PLAN.md, RULES.md",
+        "style": "Segue Conventional Commits. Referencia sempre a fase do PLAN.md no commit. Nunca sobe código quebrado.",
+        "implicit": true,
+        "gitOnly": true
+      }
+    ]
+  },
+  "rules": {
+    "code": "- Seguir Clean Code: funções pequenas, nomes descritivos, sem comentários óbvios\n- SOLID obrigatório nas camadas de serviço e repositório\n- Sem any implícito em TypeScript — usar tipos explícitos ou generics\n- Sem console.log em produção — usar logger estruturado (Winston/Pino)",
+    "architecture": "- Separação estrita de camadas: Controller → Service → Repository\n- Regras de negócio somente na camada Service — nunca no Controller\n- Dependências injetadas via construtor (IoC)\n- Módulos independentes: nenhum módulo importa diretamente de outro módulo interno",
+    "tests": "- Cobertura mínima de 80% nas camadas Service e Repository\n- Todo endpoint de API deve ter ao menos 1 teste de integração com Supertest\n- Testes E2E obrigatórios para fluxos críticos (agendamento, cancelamento, login)\n- Mocks apenas para dependências externas (SendGrid, Twilio, BD em testes unitários)",
+    "security": "- Nunca logar dados pessoais (CPF, e-mail, telefone) — mascarar antes de registrar\n- Validar e sanitizar todo input com Zod antes de processar\n- Rate limiting em /auth/* e /agendamentos (máx 20 req/min por IP)\n- JWT com expiração de 15min + refresh token em HttpOnly cookie",
+    "examples": "Exemplo de agente respondendo corretamente:\n\nUsuário: /implementar endpoint de agendamento\nOrquestrador: Vou acionar o Backend para implementar POST /agendamentos conforme SPEC.md §3.2. Após a implementação, o Code Reviewer fará revisão obrigatória antes de qualquer commit.\nBackend: [implementa o endpoint com validação Zod, service layer, repositório Prisma e teste Supertest]\nCode Reviewer: Aprovado. Sem issues Crítico ou Alto. Cobertura: 84%.\nOrquestrador: Code Reviewer aprovou. Acionando Git Master para commit.",
+    "hooks": [
+      {
+        "trigger": "Antes de iniciar qualquer implementação",
+        "action": "Ler SPEC.md, PLAN.md e RULES.md para garantir alinhamento com escopo e regras do projeto",
+        "tool": "Read"
+      },
+      {
+        "trigger": "Após qualquer /implementar",
+        "action": "Executar /code-review obrigatoriamente antes de qualquer commit ou PR",
+        "tool": "Bash (testes) + análise de código"
+      },
+      {
+        "trigger": "Antes de merge na main",
+        "action": "Confirmar que todos os testes passam e que o Code Reviewer aprovou sem issues Crítico ou Alto",
+        "tool": "CI/CD (GitHub Actions)"
+      }
+    ]
+  },
+  "cmds": {
+    "list": [
+      {
+        "name": "/corrigir",
+        "goal": "Revisar código e sugerir correções conforme SPEC, RULES e SECURITY",
+        "when": "Após implementar uma funcionalidade",
+        "args": "[arquivo ou trecho]",
+        "reads": "SPEC.md, RULES.md, SECURITY.md"
+      },
+      {
+        "name": "/implementar",
+        "goal": "Implementar uma tarefa específica do plano",
+        "when": "Ao iniciar nova tarefa",
+        "args": "[ID ou descrição]",
+        "reads": "PLAN.md, SPEC.md, RULES.md, SECURITY.md"
+      },
+      {
+        "name": "/code-review",
+        "goal": "Revisão obrigatória após qualquer /implementar — analisa qualidade, segurança, performance e conformidade. Bloqueia merge se encontrar Crítico ou Alto.",
+        "when": "OBRIGATÓRIO após toda /implementar antes de qualquer commit ou PR",
+        "args": "[arquivo, pasta ou descrição da feature implementada]",
+        "reads": "SPEC.md, RULES.md, SECURITY.md, PLAN.md"
+      },
+      {
+        "name": "/explicar",
+        "goal": "Explicar parte do sistema ou fluxo de negócio",
+        "when": "Para entender um módulo ou decisão",
+        "args": "[módulo ou fluxo]",
+        "reads": "SPEC.md, CLAUDE.md"
+      },
+      {
+        "name": "/testar",
+        "goal": "Criar ou rodar testes de um módulo",
+        "when": "Após implementar funcionalidades",
+        "args": "[módulo]",
+        "reads": "SPEC.md, RULES.md"
+      },
+      {
+        "name": "/validar",
+        "goal": "Verificar se mudança está alinhada com SPEC/PLAN/RULES/SECURITY",
+        "when": "Antes de abrir PR",
+        "args": "[descrição da mudança]",
+        "reads": "SPEC.md, PLAN.md, RULES.md, SECURITY.md"
+      },
+      {
+        "name": "/sec-review",
+        "goal": "Fazer revisão de segurança de um componente ou PR",
+        "when": "Antes de qualquer merge com código de auth, dados ou integrações",
+        "args": "[arquivo ou componente]",
+        "reads": "SECURITY.md, RULES.md"
+      },
+      {
+        "name": "/db-review",
+        "goal": "Revisar modelagem, queries e índices do banco de dados",
+        "when": "Ao criar/alterar models, migrations ou queries complexas",
+        "args": "[model ou migration]",
+        "reads": "SPEC.md, RULES.md"
+      },
+      {
+        "name": "/git-commit",
+        "goal": "Fluxo completo de versionamento: verifica aprovação do Code Reviewer, confirma testes passando, cria commit semântico e abre PR.",
+        "when": "SOMENTE após /code-review aprovado e /testar com todos passando.",
+        "args": "descrição da feature ou fix concluído",
+        "reads": "SPEC.md, PLAN.md, RULES.md",
+        "gitOnly": true
+      }
+    ]
+  }
+}
