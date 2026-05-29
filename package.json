@@ -1,0 +1,12 @@
+{
+  "name": "specdrivendevelopment-terminal-builder",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}
