@@ -1,12 +1,14 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "apps/backend/api/*.js", "use": "@vercel/node" },
-    { "src": "apps/frontend/**", "use": "@vercel/static" }
-  ],
+  "buildCommand": "echo 'no build needed'",
+  "outputDirectory": "apps/frontend",
+  "functions": {
+    "apps/backend/api/*.js": {
+      "runtime": "@vercel/node"
+    }
+  },
   "routes": [
     { "src": "/api/(.*)", "dest": "apps/backend/api/$1" },
-    { "src": "/", "dest": "/apps/frontend/index.html" },
-    { "src": "/(.+)", "dest": "/apps/frontend/$1" }
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
