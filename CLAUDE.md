@@ -4,40 +4,50 @@
 
 **SDD Terminal** é uma ferramenta web para gerar documentação de software orientada a agentes de IA (CLAUDE.md, SPEC.md, PLAN.md, AGENTS.md, RULES.md, HOOKS.md, SECURITY.md, SLASH-COMMANDS.md, CHANGELOG.md) para uso com Claude Code.
 
-- **Stack:** HTML + CSS + JavaScript vanilla puro — zero bundler, zero build step
-- **Dependências externas (via CDN):** `lz-string` (compressão de URL para "Copiar Link") e `jszip` (empacotamento de download)
-- **Deploy:** GitHub Pages (static, sem servidor)
-- **Funciona offline:** após primeira visita, o Service Worker cacheia todos os assets (PWA)
+- **Stack:** front HTML + CSS + JavaScript vanilla puro; backend Node ESM (Vercel Functions) com `jszip`
+- **Dependências externas (via CDN no front):** `lz-string` (compressão de URL para "Copiar Link")
+- **Deploy:** Vercel — dois projetos independentes: `apps/frontend` (casca estática) + `apps/backend` (Vercel Functions, lógica de geração oculta)
+- **Funciona online:** a geração de arquivos requer o backend (o shell PWA ainda cacheia assets estáticos, mas a geração em si é online)
 - **Persistência:** `localStorage` (autosave em cada input). `window.location.hash` é usado **apenas sob demanda** ao clicar em "Copiar Link" (compressão via lz-string)
 
 ## Estrutura do projeto
 
 ```
-index.html         HTML estrutural + <link> para style.css + <script> para app.js + CDNs (lz-string, jszip)
-style.css          Design system terminal verde #00ff41 — todo o CSS da aplicação
-app.js             Estado, render, geradores, persistência localStorage, ZIP export, registro do Service Worker
-sw.js              Service Worker: cache-first com versionamento (sdd-v<N>) — funciona 100% offline
-manifest.json      Manifesto PWA (nome, ícones, theme color #00ff41)
-CLAUDE.md          Este arquivo — constituição do projeto para agentes de IA
-PLAN.md            Plano de implementação ativo
-README.md          Visão geral pública do projeto
+apps/frontend/     Casca estática (index.html, app.js enxuto, style.css, sw.js, config.js) — coleta o form e chama /api/*
+apps/backend/      Vercel Functions: api/generate.js, api/package.js; lib/generators (g*() migrados), lib/scaffold (.claude/.specs), lib/validate, lib/cors
+docs/              Design e planos
+CLAUDE.md          Constituição do projeto
 ```
 
-## Estrutura de `app.js`
+## Estrutura de `apps/frontend/app.js`
+
+O frontend `app.js` é agora uma casca enxuta: estado + render do formulário + fetch para a API. Os geradores (`g*()`) foram migrados para `apps/backend/lib/generators` e **não existem mais no frontend**.
 
 ```
-app.js
+apps/frontend/app.js
 ├── ESTADO        const S = { meta, domain, arch, quality, plan, agents, rules, cmds }
-├── DEF_AGENTS    Agentes padrão (Orquestrador, Arquiteto, Backend, Frontend, QA, DevOps, DBA, Code Reviewer, Git Master)
-├── DEF_CMDS      Comandos padrão (/corrigir, /implementar, /code-review, /testar, /git-commit, etc.)
+├── DEF_AGENTS    Agentes padrão
+├── DEF_CMDS      Comandos padrão
 ├── STORAGE       loadFromLocalStorage(), saveToLocalStorage() — autosave debounced
 ├── BOOT          init(), renderFooter(), checkMobile(), registerSW()
 ├── RENDER        render(), renderSB(), renderStep(), renderBotNav()
 ├── ETAPAS        sMeta(), sDomain(), sArch(), sQuality(), sPlan(), sAgents(), sRules(), sCmds(), sReview()
-├── GERAÇÃO       gClaude(), gSpec(), gPlan(), gAgents(), gRules(), gHooks(), gCmds(), gSecurity(), gChangelog()
-├── EXPORT        downloadZip() — usa JSZip para empacotar todos os arquivos gerados
-├── SHARE         copyLink() — gera URL comprimida com lz-string sob demanda
+├── FETCH         downloadZip() → POST /api/package; copyLink() → lz-string sob demanda
 └── UTILS         u(), li(), tags(), e(), opts(), toast(), exportJSON(), importJSON()
+```
+
+Os geradores vivem em `apps/backend/lib/generators/`:
+```
+apps/backend/lib/generators/
+├── claude.js      gClaude()
+├── spec.js        gSpec()
+├── plan.js        gPlan()
+├── agents.js      gAgents()
+├── rules.js       gRules()
+├── hooks.js       gHooks()
+├── cmds.js        gCmds()
+├── security.js    gSecurity()
+└── changelog.js   gChangelog()
 ```
 
 ## Padrões obrigatórios
@@ -112,12 +122,14 @@ Ler o design ativo em `docs/plans/` antes de qualquer implementação.
 
 ## Servir localmente
 
-Service Worker exige HTTP (não funciona em `file://`):
-
 ```bash
-python -m http.server 8080
-# ou
-npx serve .
+# Backend (Vercel Functions) na porta 3000
+cd apps/backend && npx vercel dev --listen 3000
+
+# Frontend (casca estática) na porta 8080 — em outro terminal
+cd apps/frontend && python -m http.server 8080
 ```
+
+`apps/frontend/config.js` aponta `API_BASE` para `localhost:3000` em dev. Em produção, deve ser configurado para a URL do backend Vercel deployado. Consulte `docs/DEPLOY.md` para o passo-a-passo completo.
 
 Acesse `http://localhost:8080` e abra DevTools → Application → Service Workers para inspecionar.
