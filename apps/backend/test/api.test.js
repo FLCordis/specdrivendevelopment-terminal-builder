@@ -32,4 +32,14 @@ test('generate devolve clarifications quando state incompleto', async () => {
   await generate({ method: 'POST', body: { state: { meta: {}, domain: {}, arch: {}, quality: {}, plan: { phases: [] }, agents: { list: [] }, cmds: { list: [] }, rules: {} } }, headers: {} }, res);
   assert.ok(Array.isArray(res._json.clarifications));
   assert.ok(res._json.clarifications.length > 0);
+  assert.ok(res._json.files.length > 0);
+});
+
+test('state incompleto ainda gera arquivos com marcadores [NEEDS CLARIFICATION]', async () => {
+  const res = mockRes();
+  await generate({ method: 'POST', body: { state: { meta: {}, domain: {}, arch: {}, quality: {}, plan: { phases: [] }, agents: { list: [] }, cmds: { list: [] }, rules: {} } }, headers: {} }, res);
+  assert.equal(res._status, 200);
+  assert.ok(res._json.files.length > 0);
+  const blob = res._json.files.map(f => f.content).join('\n');
+  assert.match(blob, /\[NEEDS CLARIFICATION/);
 });

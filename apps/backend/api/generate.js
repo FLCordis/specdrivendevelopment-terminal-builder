@@ -1,5 +1,5 @@
 import { buildManifest } from '../lib/scaffold/index.js';
-import { validateState } from '../lib/validate.js';
+import { validateState, normalizeState } from '../lib/validate.js';
 import { applyCors } from '../lib/cors.js';
 
 export default async function handler(req, res) {
@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const state = req.body?.state;
   const v = validateState(state);
   if (!v.ok) return res.status(400).json({ error: v.error });
-  if (v.clarifications.length > 0) return res.status(200).json({ files: [], clarifications: v.clarifications });
-  const files = buildManifest(state);
+  const norm = normalizeState(state);
+  const files = buildManifest(norm);
   return res.status(200).json({ files, clarifications: v.clarifications });
 }

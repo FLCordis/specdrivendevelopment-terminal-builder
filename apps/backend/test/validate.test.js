@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateState } from '../lib/validate.js';
+import { validateState, normalizeState } from '../lib/validate.js';
 
 test('rejeita state sem meta/domain', () => {
   const r = validateState({});
@@ -19,4 +19,13 @@ test('state completo não gera clarifications obrigatórias', () => {
   const r = validateState(full);
   assert.equal(r.ok, true);
   assert.equal(r.clarifications.length, 0);
+});
+
+test('normalizeState({}) retorna arrays em todos os campos obrigatórios', () => {
+  const n = normalizeState({});
+  assert.ok(Array.isArray(n.arch.languages));
+  assert.ok(Array.isArray(n.agents.list));
+  assert.ok(Array.isArray(n.plan.phases));
+  assert.ok(Array.isArray(n.cmds.list));
+  assert.ok(Array.isArray(n.domain.objectives));
 });
