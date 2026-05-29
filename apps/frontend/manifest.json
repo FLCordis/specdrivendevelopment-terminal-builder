@@ -1,0 +1,20 @@
+{
+  "name": "SDD Terminal",
+  "short_name": "SDD",
+  "description": "Spec-Driven Development Terminal — gera documentação para agentes de IA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#ff8c1a",
+  "background_color": "#0f0a05",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
