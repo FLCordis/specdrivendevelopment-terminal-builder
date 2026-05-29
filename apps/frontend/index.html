@@ -11,8 +11,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Press+Start+2P&display=swap">
 <link rel="stylesheet" href="style.css">
-<script defer src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body class="beginner">
 
@@ -95,13 +93,12 @@
   <div class="pv-tip">💡 Cole estes arquivos no repositório. Comece pelo <strong>CLAUDE.md</strong>.</div>
   <div class="pvtabs" id="pvtabs"></div>
   <div class="pvc" id="pvc"><pre style="color:#1a4a1a;font-size:13px">// Preencha as etapas ao lado
-// para ver os arquivos gerados
-// em tempo real aqui.
+// e clique em Gerar para listar
+// os arquivos do pacote aqui.
 
 > Aguardando dados_</pre></div>
   <div class="pvbar">
-    <button class="btn btn-sm" onclick="copyOne()">⎘ Copiar este</button>
-    <button class="btn btn-sm" onclick="copyAll()">⎘ Copiar tudo</button>
+    <button class="btn btn-sm" onclick="generate()">⚡ Gerar</button>
     <button class="btn btn-sm btn-p" onclick="downloadZip()">📦 ZIP</button>
   </div>
 </aside>
@@ -114,25 +111,10 @@
     <span id="mb-step" style="font-size:11px;color:var(--gd);font-weight:700;white-space:nowrap"></span>
     <button class="btn btn-sm btn-p" onclick="next()" id="mb-next">▶</button>
   </div>
-  <button class="btn btn-sm btn-a" onclick="openPVOverlay()">👁 Ver</button>
+  <button class="btn btn-sm btn-a" onclick="generate()">⚡ Gerar</button>
 </div>
 
-<button id="fab-pv" onclick="openPVOverlay()">👁 Preview</button>
-
-<div id="pv-overlay">
-  <div class="pvo-header">
-    <h3>// Arquivos gerados</h3>
-    <div style="display:flex;gap:7px;align-items:center">
-      <button class="btn btn-sm" onclick="copyOne2()">⎘ Copiar</button>
-      <button class="btn btn-sm" onclick="copyAll()">⎘ Tudo</button>
-      <button class="btn btn-sm btn-p" onclick="downloadZip()">📦 ZIP</button>
-      <button class="btn btn-sm btn-d" onclick="closePVOverlay()">✕</button>
-    </div>
-  </div>
-  <div class="pv-tip">💡 Cole estes arquivos no repositório. Comece pelo <strong>CLAUDE.md</strong>.</div>
-  <div class="pvtabs" id="pvtabs2" style="flex-shrink:0"></div>
-  <div class="pvc" id="pvc2" style="flex:1;overflow-y:auto"></div>
-</div>
+<button id="fab-pv" onclick="downloadZip()">📦 ZIP</button>
 
 <div class="modal-overlay" id="template-modal" style="display:none" onclick="if(event.target===this)closeTemplateModal()">
   <div class="modal" style="max-width:620px">
@@ -174,6 +156,7 @@
   </div>
 </div>
 
+<script src="config.js"></script>
 <script defer src="app.js"></script>
 </body>
 </html>
