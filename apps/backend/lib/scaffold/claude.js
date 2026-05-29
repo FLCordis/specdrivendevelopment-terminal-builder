@@ -2,6 +2,7 @@ import * as G from '../generators/index.js';
 import { agentFile } from './templates/agent-frontmatter.js';
 import { SETTINGS_JSON } from './templates/settings.js';
 import { SKILLS } from './templates/skills.js';
+import { HOOK_FILES } from './templates/hooks.js';
 
 export function buildClaudeEntries(state) {
   const entries = [];
@@ -22,6 +23,9 @@ export function buildClaudeEntries(state) {
   // Skills (Task 6 populates SKILLS for real) + settings.json (Task 6 replaces the stub).
   for (const sk of SKILLS) entries.push({ path: `.claude/skills/${sk.name}/SKILL.md`, content: sk.content });
   entries.push({ path: '.claude/settings.json', content: SETTINGS_JSON(state) });
+
+  // Hook files (Task 6) — executable PreToolUse scripts.
+  for (const h of HOOK_FILES) entries.push(h);
 
   return entries;
 }
