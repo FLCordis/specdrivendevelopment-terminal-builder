@@ -28,6 +28,10 @@ export function generateHarness(state: ProjectState): GeneratedFile[] {
     },
   };
 
+  const gitPatterns = state.meta.useGit
+    ? "  /\\bgit\\s+push\\b/i,\n  /\\bgit\\s+merge\\b/i,\n"
+    : "";
+
   const hook = `#!/usr/bin/env node
 // Safety harness — bloqueia comandos destrutivos (PreToolUse / Bash).
 // Recebe o payload do hook em JSON no stdin; sai com código 2 para BLOQUEAR.
@@ -53,9 +57,7 @@ const DENY = [
   /\\brm\\s+-rf?\\b/i,
   /\\bdrop\\s+(table|database)\\b/i,
   /\\btruncate\\b/i,
-  /\\bgit\\s+push\\b/i,
-  /\\bgit\\s+merge\\b/i,
-  /--force\\b/,
+${gitPatterns}  /--force\\b/,
 ];
 
 const hit = DENY.find((re) => re.test(command));

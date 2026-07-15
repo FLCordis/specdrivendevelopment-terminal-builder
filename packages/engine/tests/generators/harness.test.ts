@@ -48,4 +48,18 @@ describe("generateHarness", () => {
     expect(hook.content).toContain("process.exit(2)");
     expect(hook.content).toContain("tool_input");
   });
+
+  it("com git: o hook também nega padrões de git", () => {
+    const hook = generateHarness(make(true)).find((f) =>
+      f.path.endsWith("guard-destructive.mjs"),
+    )!;
+    expect(hook.content).toContain("git\\s+push");
+  });
+
+  it("sem git: o hook não contém padrões de git", () => {
+    const hook = generateHarness(make(false)).find((f) =>
+      f.path.endsWith("guard-destructive.mjs"),
+    )!;
+    expect(hook.content).not.toContain("git");
+  });
 });
