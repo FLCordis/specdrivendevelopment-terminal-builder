@@ -1,0 +1,32 @@
+# Design — Loja API
+
+**Status:** Aprovado (gerado pelo SDD Terminal — tratar como brainstorming concluído)
+**Data:** 2026-07-14
+
+<project_scope>
+Loja API é um projeto do tipo **API REST**. backend de e-commerce
+</project_scope>
+
+## Casos de uso
+
+- listar produtos
+- criar pedido
+
+## Não-objetivos
+
+- frontend
+
+<architecture>
+Stack: Node + TypeScript. Estilo: hexagonal.
+Ver `_context/architecture.md` para justificativa e detalhes.
+</architecture>
+
+<acceptance_criteria>
+- Todos os casos de uso acima cobertos por teste.
+- Estratégia de testes: TDD (alvo de cobertura: 90%).
+- Gates de segurança aprovados (ver `_context/security.md`).
+</acceptance_criteria>
+
+## Próximo passo
+
+Use `superpowers:writing-plans` para transformar cada feature do `roadmap.md` em um plano de implementação com tasks TDD.

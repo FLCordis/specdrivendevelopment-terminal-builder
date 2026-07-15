@@ -1,0 +1,31 @@
+# Design — Painel
+
+**Status:** Aprovado (gerado pelo SDD Terminal — tratar como brainstorming concluído)
+**Data:** 2026-07-14
+
+<project_scope>
+Painel é um projeto do tipo **SPA**. dashboard
+</project_scope>
+
+## Casos de uso
+
+- ver métricas
+
+## Não-objetivos
+
+- mobile nativo
+
+<architecture>
+Stack: React + Vite. Estilo: componentes.
+Ver `_context/architecture.md` para justificativa e detalhes.
+</architecture>
+
+<acceptance_criteria>
+- Todos os casos de uso acima cobertos por teste.
+- Estratégia de testes: TDD + testes de componente (alvo de cobertura: 75%).
+- Gates de segurança aprovados (ver `_context/security.md`).
+</acceptance_criteria>
+
+## Próximo passo
+
+Use `superpowers:writing-plans` para transformar cada feature do `roadmap.md` em um plano de implementação com tasks TDD.

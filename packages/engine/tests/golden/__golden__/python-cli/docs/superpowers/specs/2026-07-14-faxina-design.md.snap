@@ -1,0 +1,32 @@
+# Design — Faxina
+
+**Status:** Aprovado (gerado pelo SDD Terminal — tratar como brainstorming concluído)
+**Data:** 2026-07-14
+
+<project_scope>
+Faxina é um projeto do tipo **CLI**. limpador de arquivos
+</project_scope>
+
+## Casos de uso
+
+- escanear
+- remover duplicados
+
+## Não-objetivos
+
+- GUI
+
+<architecture>
+Stack: Python. Estilo: camadas.
+Ver `_context/architecture.md` para justificativa e detalhes.
+</architecture>
+
+<acceptance_criteria>
+- Todos os casos de uso acima cobertos por teste.
+- Estratégia de testes: TDD (alvo de cobertura: 80%).
+- Gates de segurança aprovados (ver `_context/security.md`).
+</acceptance_criteria>
+
+## Próximo passo
+
+Use `superpowers:writing-plans` para transformar cada feature do `roadmap.md` em um plano de implementação com tasks TDD.
