@@ -1878,3 +1878,21 @@ git commit -m "test(engine): spike E2E — valida Superpowers (paralelismo/token
 **3. Consistência de tipos:** `generate*` retornam `GeneratedFile[]` em todos os geradores; `generate()` retorna `GeneratedPackage`; `validate()` retorna `ValidationResult`; `packageZip()` retorna `Uint8Array`. `ProjectState`/`Feature` referenciados de forma consistente. `orClarify`/`bullets`/`slugify` com assinaturas estáveis entre Tasks 3, 5–11. `CLARIFY_FIELDS` definido na Task 4 e coerente com os `orClarify` usados nos geradores.
 
 **Nota:** a Task 15 usa `node --experimental-strip-types` para rodar TS sem build; se a versão de Node do ambiente não suportar, o implementer deve trocar por `npx tsx src/cli.ts` (adicionar `tsx` como devDependency) — registrar a escolha no commit.
+
+---
+
+## Correções pós-implementação (registro fiel — o código diverge deste plano nestes pontos)
+
+Durante a execução (subagent-driven), reviews encontraram e corrigiram:
+
+1. **Task 1:** `tsconfig.types` inclui `"node"`, logo `@types/node` foi adicionado a devDependencies (o plano omitia a dep). Sem isso o typecheck falha (TS2688).
+2. **Task 3:** a regex de diacríticos de `slugify` foi trocada dos caracteres combinantes Unicode literais para a forma escapada `/[̀-ͯ]/g` (comportamento idêntico, menos frágil).
+3. **Task 11:** o hook `guard-destructive.mjs` teve os padrões de git (`git push`/`git merge`) **condicionados a `state.meta.useGit`** (via `gitPatterns` interpolado no `DENY`), alinhando ao `settings.json` (decisão do usuário). O template acima ainda mostra os padrões de git fixos — a versão implementada é condicional.
+4. **Task 15:** `--experimental-strip-types` falhou no Node 24; o script `gen` usa `tsx` (devDependency).
+
+### Follow-ups diferidos (Minor, não bloqueiam merge — candidatos a uma feature de hardening)
+- Reforço de cobertura de teste: branches de marcador de clarificação (readme/context/spec-slug-fallback), branch `(nenhuma)` do roadmap, boundary de `coverageTarget` (0–100), assert de `git merge` separado no harness.
+- `roadmap.ts` usa strings `[NEEDS CLARIFICATION: ...]` hardcoded em vez de reusar `orClarify` (DRY).
+- Paridade defense-in-depth: `settings.json` nega `git reset --hard` mas o hook não tem padrão equivalente.
+- `constitution.test.ts`: assert `"superpowers"` passa via substring de path — reforçar para a linguagem de mandato.
+- `npm audit`: 5 vulns dev-only herdadas de versões pinadas (vitest→esbuild/vite) — avaliar bump.
