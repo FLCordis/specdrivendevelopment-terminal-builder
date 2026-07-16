@@ -7,30 +7,40 @@ export const FeatureSchema = z.object({
 });
 
 export const ProjectStateSchema = z.object({
-  meta: z.object({
-    name: z.string().default(""),
-    description: z.string().default(""),
-    specDate: z.string().default(""),
-    useGit: z.boolean().default(true),
-  }),
-  domain: z.object({
-    projectType: z.string().default(""),
-    useCases: z.array(z.string()).default([]),
-    nonGoals: z.array(z.string()).default([]),
-  }),
-  arch: z.object({
-    stack: z.string().default(""),
-    style: z.string().default(""),
-  }),
-  quality: z.object({
-    testStrategy: z.string().default(""),
-    coverageTarget: z.number().min(0).max(100).default(80),
-    ci: z.boolean().default(true),
-  }),
-  security: z.object({
-    threatModel: z.string().default(""),
-    gates: z.array(z.string()).default([]),
-  }),
+  meta: z
+    .object({
+      name: z.string().default(""),
+      description: z.string().default(""),
+      specDate: z.string().default(""),
+      useGit: z.boolean().default(true),
+    })
+    .default({}),
+  domain: z
+    .object({
+      projectType: z.string().default(""),
+      useCases: z.array(z.string()).default([]),
+      nonGoals: z.array(z.string()).default([]),
+    })
+    .default({}),
+  arch: z
+    .object({
+      stack: z.string().default(""),
+      style: z.string().default(""),
+    })
+    .default({}),
+  quality: z
+    .object({
+      testStrategy: z.string().default(""),
+      coverageTarget: z.number().min(0).max(100).default(80),
+      ci: z.boolean().default(true),
+    })
+    .default({}),
+  security: z
+    .object({
+      threatModel: z.string().default(""),
+      gates: z.array(z.string()).default([]),
+    })
+    .default({}),
   features: z.array(FeatureSchema).default([]),
 });
 
