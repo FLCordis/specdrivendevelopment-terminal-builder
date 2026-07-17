@@ -14,6 +14,8 @@ export function useProject(id: string) {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setState(null);
     getProject(id).then((p) => {
       if (!active) return;
       setProject(p ?? null);
