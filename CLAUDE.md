@@ -2,108 +2,102 @@
 
 ## Sobre o projeto
 
-**SDD Terminal** é uma ferramenta web para gerar documentação de software orientada a agentes de IA (CLAUDE.md, SPEC.md, PLAN.md, AGENTS.md, RULES.md, HOOKS.md, SECURITY.md, SLASH-COMMANDS.md, CHANGELOG.md) para uso com Claude Code.
+**SDD Terminal v2** é uma ferramenta local-first que gera projetos pré-cabeados para
+trabalhar com [Superpowers](https://github.com/obra/superpowers) no Claude Code —
+scaffolding de `.claude/` (agentes, hooks, settings) e `docs/superpowers/specs/`
+(constituição, specs, roadmap) a partir de um formulário de estado do projeto.
 
-- **Stack:** front HTML + CSS + JavaScript vanilla puro; backend Node ESM (Vercel Functions) com `jszip`
-- **Dependências externas:** front sem CDNs (lz-string/jszip foram removidos na migração); `jszip` é dependência npm do backend
-- **Deploy:** Vercel — dois projetos independentes: `apps/frontend` (casca estática) + `apps/backend` (Vercel Functions, lógica de geração oculta)
-- **Funciona online:** a geração de arquivos requer o backend (o shell PWA ainda cacheia assets estáticos, mas a geração em si é online)
-- **Persistência:** `localStorage` (autosave em cada input). A geração/ download dos arquivos é feita via `POST /api/*` (o preview ao vivo e o "Copiar Link"/hash foram removidos na migração)
+- **Stack:** monorepo npm com dois workspaces — `packages/engine` (motor puro em
+  TypeScript, sem I/O nem dependências de runtime web) e `apps/web` (Next.js
+  App Router, local-first)
+- **Motor (`@sdd/engine`):** biblioteca TS pura — valida o estado (Zod), gera os
+  arquivos do projeto e empacota um zip (`fflate`). Sem chamadas de rede, sem
+  `fs`/`process`. Testado por golden files (snapshots de output esperado por
+  cenário) em `packages/engine/tests/golden`.
+- **App (`apps/web`):** a geração roda inteiramente no browser — o formulário
+  chama `@sdd/engine` direto no client, sem round-trip ao servidor. O único
+  endpoint de servidor é `/api/assist` (sugestões via Anthropic, opcional).
+- **Persistência:** IndexedDB via Dexie (`apps/web/lib/db.ts`) — projetos ficam
+  no navegador do usuário, com autosave debounced a cada edição. Não há
+  `localStorage` nem backend de persistência.
+- **Funciona offline:** criar, editar e gerar/baixar um projeto não depende de
+  rede. Só o assist (sugestões de IA) exige o servidor Next.js com
+  `ANTHROPIC_API_KEY` configurada.
 
 ## Estrutura do projeto
 
 ```
-apps/frontend/     Casca estática (index.html, app.js enxuto, style.css, sw.js, config.js) — coleta o form e chama /api/*
-apps/backend/      Vercel Functions: api/generate.js, api/package.js; lib/generators (g*() migrados), lib/scaffold (.claude/.specs), lib/validate, lib/cors
-docs/              Design e planos
-CLAUDE.md          Constituição do projeto
-```
+packages/engine/     Motor puro (@sdd/engine) — schema Zod, geradores, validate, zip, CLI
+  src/
+  ├── state/schema.ts     ProjectStateSchema (Zod) — fonte única de verdade do estado
+  ├── generators/         geradores puros: bootstrap, constitution, context, harness, readme, roadmap, spec
+  ├── compose.ts          generate(state) → GeneratedPackage (monta a árvore de arquivos)
+  ├── validate.ts         validate(state) → ValidationResult
+  ├── zip.ts              packageZip(pkg) → bytes (fflate)
+  ├── cli.ts              CLI standalone do motor (uso opcional fora do app web)
+  └── index.ts            exports públicos do pacote
+  tests/golden/           golden files por cenário (api-node, python-cli, react-front, sem-git)
 
-## Estrutura de `apps/frontend/app.js`
+apps/web/             Next.js App Router — local-first
+  app/
+  ├── page.tsx                lista de projetos (IndexedDB)
+  ├── project/[id]/page.tsx   rota do editor
+  ├── project/[id]/Editor.tsx orquestra useProject + BasicForm + FilePreview
+  └── api/assist/route.ts     único endpoint de servidor — 501 sem ANTHROPIC_API_KEY
+  components/                BasicForm, FilePreview, ProjectList, ui/Field — só falam com lib/*
+  hooks/useProject.ts         estado do projeto + autosave debounced (400ms) via lib/projects.ts
+  lib/
+  ├── db.ts                   único módulo que conhece Dexie (schema da tabela `projects`)
+  ├── projects.ts             CRUD de projetos sobre lib/db.ts
+  ├── generate.ts             único módulo que conhece o engine no client (runGenerate, downloadZip)
+  ├── set-path.ts             update imutável de campo por path (usado por useProject)
+  └── assist/                 provider.ts (interface), anthropic.ts (impl), prompt.ts
 
-O frontend `app.js` é agora uma casca enxuta: estado + render do formulário + fetch para a API. Os geradores (`g*()`) foram migrados para `apps/backend/lib/generators` e **não existem mais no frontend**.
-
-```
-apps/frontend/app.js
-├── ESTADO        const S = { meta, domain, arch, quality, plan, agents, rules, cmds }
-├── DEF_AGENTS    Agentes padrão
-├── DEF_CMDS      Comandos padrão
-├── STORAGE       loadFromLocalStorage(), saveToLocalStorage() — autosave debounced
-├── BOOT          init(), renderFooter(), checkMobile(), registerSW()
-├── RENDER        render(), renderSB(), renderStep(), renderBotNav()
-├── ETAPAS        sMeta(), sDomain(), sArch(), sQuality(), sPlan(), sAgents(), sRules(), sCmds(), sReview()
-├── FETCH         generate() → POST /api/generate; downloadZip() → POST /api/package; renderFileList()
-└── UTILS         u(), li(), tags(), e(), opts(), toast(), exportJSON(), importJSON()
-```
-
-Os geradores vivem todos em um único módulo `apps/backend/lib/generators/index.js` (migrados verbatim de `app.js`, agora funções puras de `state`):
-```
-apps/backend/lib/
-├── generators/
-│   ├── index.js            gClaude, gSpec, gPlan, gAgents, gRules, gHooks, gCmds,
-│   │                       gSecurity, gChangelog, gStart, gArchitecture, gAgentFile,
-│   │                       gPRTemplate, gBugReport, gFeatureRequest + helpers (nc, ls, slugifyAgent)
-│   └── legacy-manifest.js  espelha o getManifest() antigo (usado p/ golden files)
-├── scaffold/               buildManifest() → árvore .claude/ + .specs/ (claude.js, specs.js, start.js, index.js)
-├── validate.js             validateState() + normalizeState()
-└── cors.js                 applyCors()
+docs/                 Design e planos
+CLAUDE.md             Constituição do projeto
 ```
 
 ## Padrões obrigatórios
 
-### Atualização de estado
-```javascript
-// Sempre usar u() para campos simples
-u('meta.name', value)          // atualiza S.meta.name = value + autosave
+### `ProjectStateSchema` é a fonte única de verdade
+O schema Zod em `packages/engine/src/state/schema.ts` define a forma do estado
+(`meta`, `domain`, `arch`, `quality`, `security`, ...). Tanto a validação no
+motor (`validate()`) quanto o formulário no `apps/web` derivam desse schema —
+nunca duplicar a forma do estado em outro lugar.
 
-// Sempre usar li() para campos de arrays de objetos
-li('plan.phases', i, 'name', value)  // atualiza S.plan.phases[i].name + autosave
+### Fronteiras de módulo no `apps/web`
+- **Componentes só falam com `lib/*`** — nunca acessam Dexie, o engine ou
+  `fetch('/api/assist')` diretamente.
+- **Só `lib/db.ts` conhece Dexie.** CRUD de projetos passa por `lib/projects.ts`.
+- **Só `lib/generate.ts` conhece `@sdd/engine` no client** (`runGenerate`,
+  `downloadZip`). Nenhum componente importa `@sdd/engine` diretamente.
+- **Assist** passa por `lib/assist/provider.ts` (interface) → implementação em
+  `lib/assist/anthropic.ts`, chamada só pela rota `/api/assist`.
+
+### Atualização de estado (`useProject`)
+```ts
+// Campo simples — update imutável via path
+update('meta.name', value)
+
+// Item de lista — helper que delega a update()
+updateList('domain.useCases', i, 'name', value)
 ```
+Ambos disparam autosave debounced (400ms) em IndexedDB via `lib/projects.ts`;
+no unmount, o save pendente é *flushed* de imediato (ver `useProject.ts`).
 
-Tanto `u()` quanto `li()` disparam autosave em `localStorage` automaticamente (debounce de 400ms).
+### Geração
+A geração de arquivos (`runGenerate`) e o download do zip (`downloadZip`) rodam
+100% no browser, chamando `@sdd/engine` — não há endpoint de geração no
+servidor. O único endpoint de servidor é `/api/assist`, e ele responde `501`
+quando `ANTHROPIC_API_KEY` não está configurada (assist é sempre opcional).
 
-### Renderização
-- Após qualquer mudança de estado: `render()` já é chamado pelos handlers
-- Não há mais preview ao vivo no front — a geração de arquivos acontece no backend via `generate()`/`downloadZip()`
-- Nunca manipular DOM diretamente fora das funções de render
-
-### Git condicional
-```javascript
-// Todo código relacionado a Git DEVE ser condicional
-S.meta.useGit === true ? '...conteúdo git...' : ''
-
-// Agentes/comandos com flag gitOnly só existem quando useGit é true
-// A função setUseGit(bool) gerencia adição/remoção reativa
-```
-
-### Engenharia de Prompt — Tags XML
-Os arquivos `CLAUDE.md`, `AGENTS.md` e `RULES.md` gerados usam tags XML semânticas (`<project_scope>`, `<architecture>`, `<security_rules>`, `<examples>`, `<thinking>`) para maximizar a qualidade do prompt enviado ao Claude. Demais arquivos permanecem em Markdown puro.
-
-O campo `S.rules.examples` (Few-Shot) é injetado em CLAUDE.md dentro de `<examples>` quando preenchido.
-
-### Service Worker
-Quando o cache precisa ser invalidado (mudanças em assets), incrementar a constante `CACHE_VERSION` em `sw.js`. O SW antigo será desregistrado automaticamente.
-
-### CSS — classes existentes para reusar
-```
-Layout:    .fg (form group), .g2 (grid 2 cols), .sh (section header), .nav (botões nav)
-Feedback:  .info (verde), .warn (amarelo), .hint, .transl, .opt-note
-Listas:    .li, .lih, .lit (item, header, tipo/badge)
-Botões:    .btn, .btn-p (primário verde), .btn-d (delete vermelho), .btn-a (amarelo), .btn-sm
-Modais:    .modal-overlay, .modal, .modal-footer
-Tags:      .tc (container), .tag, .ti (input), .trm (remove)
-Checkbox:  .cb-group, .cb-item, .cb-label, .cb-sub
-Spec:      .spec-meter, .spec-meter-bar, .spec-meter-fill, .spec-meter-label
-```
-
-## Regra de ouro
-
-**Migração controlada com paridade verificada.** Mudanças que extraem ou movem
-lógica existente (ex.: geradores `g*()` saindo de `app.js` para o backend) são
-permitidas, desde que: (1) verificadas contra *golden files* — o output gerado
-deve ser idêntico ao snapshot anterior à mudança; (2) cobertas por teste de
-regressão que roda antes do merge. Funcionalidade nova é aditiva por padrão.
-Ler o design ativo em `docs/plans/` antes de qualquer implementação.
+### Migração controlada com paridade verificada
+Mudanças que extraem ou movem lógica de geração dentro de `packages/engine`
+devem ser verificadas contra os *golden files* em
+`packages/engine/tests/golden/__golden__/` — o output gerado deve ser idêntico
+ao snapshot, e cobertas por teste de regressão antes do merge. Funcionalidade
+nova é aditiva por padrão. Ler o design ativo em `docs/plans/` antes de
+qualquer implementação.
 
 ## Variáveis CSS do design system
 
@@ -122,13 +116,18 @@ Ler o design ativo em `docs/plans/` antes de qualquer implementação.
 ## Servir localmente
 
 ```bash
-# Backend (Vercel Functions) na porta 3000
-cd apps/backend && npx vercel dev --listen 3000
-
-# Frontend (casca estática) na porta 8080 — em outro terminal
-cd apps/frontend && python -m http.server 8080
+cd apps/web && npm run dev
 ```
 
-`apps/frontend/config.js` aponta `API_BASE` para `localhost:3000` em dev. Em produção, deve ser configurado para a URL do backend Vercel deployado. Consulte `docs/DEPLOY.md` para o passo-a-passo completo.
+Acesse `http://localhost:3000`. O assist (`/api/assist`) só responde de fato
+com `ANTHROPIC_API_KEY` definida no ambiente (`.env.local` do `apps/web`); sem
+ela, o endpoint responde `501` de propósito — o resto do app funciona
+normalmente sem essa chave.
 
-Acesse `http://localhost:8080` e abra DevTools → Application → Service Workers para inspecionar.
+## Testes
+
+```bash
+npm test --workspace packages/engine   # golden files + unit
+npm test --workspace apps/web          # Vitest + Testing Library (fake-indexeddb)
+npm run e2e --workspace apps/web       # Playwright (E2E)
+```

@@ -6,8 +6,5 @@
   "engines": {
     "node": "24.x"
   },
-  "workspaces": ["packages/*", "apps/*"],
-  "dependencies": {
-    "jszip": "^3.10.1"
-  }
+  "workspaces": ["packages/*", "apps/*"]
 }
