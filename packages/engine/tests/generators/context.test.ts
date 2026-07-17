@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ProjectStateSchema } from "../../src/state/schema.js";
-import { generateContext } from "../../src/generators/context.js";
+import { ProjectStateSchema } from "../../src/state/schema";
+import { generateContext } from "../../src/generators/context";
 
 const state = ProjectStateSchema.parse({
   meta: { name: "Loja", specDate: "2026-07-14" },

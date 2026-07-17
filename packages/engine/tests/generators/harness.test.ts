@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ProjectStateSchema } from "../../src/state/schema.js";
-import { generateHarness } from "../../src/generators/harness.js";
+import { ProjectStateSchema } from "../../src/state/schema";
+import { generateHarness } from "../../src/generators/harness";
 
 function make(useGit: boolean) {
   return ProjectStateSchema.parse({

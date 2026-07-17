@@ -1,4 +1,4 @@
-import { ProjectStateSchema } from "../../src/state/schema.js";
+import { ProjectStateSchema } from "../../src/state/schema";
 
 export const FIXTURES = {
   "api-node": ProjectStateSchema.parse({

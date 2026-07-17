@@ -1,5 +1,5 @@
 import { zipSync, strToU8 } from "fflate";
-import type { GeneratedPackage } from "./types.js";
+import type { GeneratedPackage } from "./types";
 
 export function packageZip(pkg: GeneratedPackage): Uint8Array {
   const entries: Record<string, Uint8Array> = {};

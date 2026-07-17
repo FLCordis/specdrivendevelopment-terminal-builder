@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validate } from "../src/validate.js";
+import { validate } from "../src/validate";
 
 const full = {
   meta: { name: "Loja", description: "e-commerce", specDate: "2026-07-14" },

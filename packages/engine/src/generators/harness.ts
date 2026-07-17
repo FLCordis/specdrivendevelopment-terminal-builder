@@ -1,5 +1,5 @@
-import type { ProjectState } from "../state/schema.js";
-import type { GeneratedFile } from "../types.js";
+import type { ProjectState } from "../state/schema";
+import type { GeneratedFile } from "../types";
 
 export function generateHarness(state: ProjectState): GeneratedFile[] {
   const deny = ["Bash(rm -rf:*)"];

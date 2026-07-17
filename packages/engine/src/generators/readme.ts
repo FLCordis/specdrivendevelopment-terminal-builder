@@ -1,6 +1,6 @@
-import type { ProjectState } from "../state/schema.js";
-import type { GeneratedFile } from "../types.js";
-import { orClarify } from "../util.js";
+import type { ProjectState } from "../state/schema";
+import type { GeneratedFile } from "../types";
+import { orClarify } from "../util";
 
 export function generateReadme(state: ProjectState): GeneratedFile[] {
   const name = orClarify(state.meta.name, "nome do projeto");

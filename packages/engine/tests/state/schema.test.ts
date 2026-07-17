@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ProjectStateSchema, parseState } from "../../src/state/schema.js";
+import { ProjectStateSchema, parseState } from "../../src/state/schema";
 
 const minimal = {
   meta: { name: "Loja", specDate: "2026-07-14" },

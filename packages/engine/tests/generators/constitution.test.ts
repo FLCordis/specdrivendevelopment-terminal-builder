@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ProjectStateSchema } from "../../src/state/schema.js";
-import { generateConstitution } from "../../src/generators/constitution.js";
+import { ProjectStateSchema } from "../../src/state/schema";
+import { generateConstitution } from "../../src/generators/constitution";
 
 const state = ProjectStateSchema.parse({
   meta: { name: "Loja", description: "e-commerce", specDate: "2026-07-14" },

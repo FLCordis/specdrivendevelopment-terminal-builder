@@ -1,5 +1,5 @@
-import type { ProjectState } from "../state/schema.js";
-import type { GeneratedFile } from "../types.js";
+import type { ProjectState } from "../state/schema";
+import type { GeneratedFile } from "../types";
 
 export function generateRoadmap(state: ProjectState): GeneratedFile[] {
   const path = "docs/superpowers/specs/roadmap.md";

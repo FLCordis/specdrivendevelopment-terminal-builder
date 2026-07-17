@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { GeneratedFile } from "../src/types.js";
+import type { GeneratedFile } from "../src/types";
 
 describe("toolchain", () => {
   it("compila tipos e roda o vitest", () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ProjectStateSchema } from "../../src/state/schema.js";
-import { generateRoadmap } from "../../src/generators/roadmap.js";
+import { ProjectStateSchema } from "../../src/state/schema";
+import { generateRoadmap } from "../../src/generators/roadmap";
 
 const state = ProjectStateSchema.parse({
   meta: { name: "Loja", specDate: "2026-07-14" },

@@ -1,6 +1,6 @@
-import type { ProjectState } from "../state/schema.js";
-import type { GeneratedFile } from "../types.js";
-import { orClarify, bullets } from "../util.js";
+import type { ProjectState } from "../state/schema";
+import type { GeneratedFile } from "../types";
+import { orClarify, bullets } from "../util";
 
 const DIR = "docs/superpowers/specs/_context";
 

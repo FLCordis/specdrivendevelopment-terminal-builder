@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { slugify, orClarify, bullets } from "../src/util.js";
+import { slugify, orClarify, bullets } from "../src/util";
 
 describe("slugify", () => {
   it("normaliza acentos e espaços", () => {

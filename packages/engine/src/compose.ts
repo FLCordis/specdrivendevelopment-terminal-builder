@@ -1,12 +1,12 @@
-import { ProjectStateSchema, type ProjectState } from "./state/schema.js";
-import type { GeneratedFile, GeneratedPackage, Warning } from "./types.js";
-import { generateConstitution } from "./generators/constitution.js";
-import { generateReadme } from "./generators/readme.js";
-import { generateBootstrap } from "./generators/bootstrap.js";
-import { generateSpec } from "./generators/spec.js";
-import { generateContext } from "./generators/context.js";
-import { generateRoadmap } from "./generators/roadmap.js";
-import { generateHarness } from "./generators/harness.js";
+import { ProjectStateSchema, type ProjectState } from "./state/schema";
+import type { GeneratedFile, GeneratedPackage, Warning } from "./types";
+import { generateConstitution } from "./generators/constitution";
+import { generateReadme } from "./generators/readme";
+import { generateBootstrap } from "./generators/bootstrap";
+import { generateSpec } from "./generators/spec";
+import { generateContext } from "./generators/context";
+import { generateRoadmap } from "./generators/roadmap";
+import { generateHarness } from "./generators/harness";
 
 const GENERATORS = [
   generateConstitution,

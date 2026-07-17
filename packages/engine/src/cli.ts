@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { generate } from "./compose.js";
-import { FIXTURES } from "../tests/golden/fixtures.js";
+import { generate } from "./compose";
+import { FIXTURES } from "../tests/golden/fixtures";
 
 const fixture = process.argv[2] ?? "api-node";
 const outDir = process.argv[3] ?? join(process.cwd(), "out", fixture);

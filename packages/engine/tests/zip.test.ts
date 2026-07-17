@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { unzipSync, strFromU8 } from "fflate";
-import { packageZip } from "../src/zip.js";
+import { packageZip } from "../src/zip";
 
 const pkg = {
   files: [

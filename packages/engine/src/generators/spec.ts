@@ -1,6 +1,6 @@
-import type { ProjectState } from "../state/schema.js";
-import type { GeneratedFile } from "../types.js";
-import { orClarify, bullets, slugify } from "../util.js";
+import type { ProjectState } from "../state/schema";
+import type { GeneratedFile } from "../types";
+import { orClarify, bullets, slugify } from "../util";
 
 export function generateSpec(state: ProjectState): GeneratedFile[] {
   const date = state.meta.specDate.trim() || "0000-00-00";

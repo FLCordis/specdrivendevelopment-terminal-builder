@@ -1,5 +1,5 @@
-import { parseState, type ProjectState } from "./state/schema.js";
-import type { Issue, ValidationResult } from "./types.js";
+import { parseState, type ProjectState } from "./state/schema";
+import type { Issue, ValidationResult } from "./types";
 
 export const CLARIFY_FIELDS: { field: string; label: string }[] = [
   { field: "meta.name", label: "nome do projeto" },

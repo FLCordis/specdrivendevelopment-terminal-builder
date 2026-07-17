@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { generate } from "../../src/compose.js";
-import { FIXTURES } from "./fixtures.js";
+import { generate } from "../../src/compose";
+import { FIXTURES } from "./fixtures";
 
 describe("golden files", () => {
   for (const [name, state] of Object.entries(FIXTURES)) {
