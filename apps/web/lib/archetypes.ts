@@ -131,7 +131,8 @@ export function applyArchetype(state: ProjectState, id: ArchetypeId): ProjectSta
   const archetype = ARCHETYPES[id];
   for (const [path, value] of Object.entries(archetype.defaults)) {
     if (isEmpty(readPath(next, path))) {
-      next = setPath(next, path, value);
+      // clona arrays para o estado nunca aliasar o array do catálogo
+      next = setPath(next, path, Array.isArray(value) ? [...value] : value);
     }
   }
   return next;
