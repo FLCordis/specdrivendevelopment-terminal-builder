@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { ProjectState } from "@sdd/engine";
 
 export type AssistStatus = "idle" | "loading" | "error" | "disabled";
@@ -8,9 +8,13 @@ export function useAssist() {
   const [status, setStatus] = useState<AssistStatus>("idle");
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // ref (e não o state) para o guard: mantém `suggest` estável em useCallback([])
+  const disabledRef = useRef(false);
 
   const suggest = useCallback(
     async (field: string, context: ProjectState) => {
+      // 501 é permanente na instância: não tenta de novo nem sai de "disabled"
+      if (disabledRef.current) return;
       setStatus("loading");
       setError(null);
       try {
@@ -20,6 +24,7 @@ export function useAssist() {
           body: JSON.stringify({ field, context }),
         });
         if (res.status === 501) {
+          disabledRef.current = true;
           setStatus("disabled");
           return;
         }

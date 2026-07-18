@@ -29,6 +29,22 @@ describe("useAssist", () => {
     expect(result.current.suggestion).toBeNull();
   });
 
+  it("disabled é permanente: nova chamada não refaz fetch nem sai de disabled", async () => {
+    const fetchMock = vi.fn(async () => new Response(
+      JSON.stringify({ error: "assist desligado" }), { status: 501 },
+    ));
+    vi.stubGlobal("fetch", fetchMock);
+    const { result } = renderHook(() => useAssist());
+
+    await act(async () => { await result.current.suggest("meta.description", ctx); });
+    expect(result.current.status).toBe("disabled");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => { await result.current.suggest("meta.description", ctx); });
+    expect(result.current.status).toBe("disabled");
+    expect(fetchMock).toHaveBeenCalledTimes(1); // não tentou de novo
+  });
+
   it("outros erros viram status error", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(
       JSON.stringify({ error: "assist indisponível" }), { status: 502 },
