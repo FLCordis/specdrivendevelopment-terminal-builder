@@ -12,6 +12,7 @@ export function useLivePreview(state: ProjectState | null, delayMs = 300) {
     if (!state) {
       setFiles([]);
       setValidation(null);
+      setError(null); // evita erro fantasma de uma geração anterior
       return;
     }
     const timer = setTimeout(() => {
