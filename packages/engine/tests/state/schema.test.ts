@@ -38,4 +38,17 @@ describe("ProjectStateSchema", () => {
     expect(r.success).toBe(true);
     if (r.success) expect(r.data.meta.name).toBe("Loja");
   });
+
+  it("aplica default 'generic' para domain.archetype", () => {
+    const parsed = ProjectStateSchema.parse(minimal);
+    expect(parsed.domain.archetype).toBe("generic");
+  });
+
+  it("preserva um archetype informado", () => {
+    const parsed = ProjectStateSchema.parse({
+      ...minimal,
+      domain: { projectType: "API REST", archetype: "api-rest" },
+    });
+    expect(parsed.domain.archetype).toBe("api-rest");
+  });
 });

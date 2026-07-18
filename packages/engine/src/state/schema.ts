@@ -18,6 +18,7 @@ export const ProjectStateSchema = z.object({
   domain: z
     .object({
       projectType: z.string().default(""),
+      archetype: z.string().default("generic"),
       useCases: z.array(z.string()).default([]),
       nonGoals: z.array(z.string()).default([]),
     })
