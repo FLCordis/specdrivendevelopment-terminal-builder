@@ -30,7 +30,7 @@ export function AssistButton({
 
       {error ? <small style={{ color: "#ff4444", marginLeft: 6 }}>{error}</small> : null}
 
-      {suggestion !== null ? (
+      {suggestion ? (
         <span style={{ display: "block", marginTop: 6, border: "1px solid #004d14", padding: 6 }}>
           <span style={{ display: "block", color: "#00bb30" }}>{suggestion}</span>
           <button

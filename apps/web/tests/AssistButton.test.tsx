@@ -32,6 +32,20 @@ describe("AssistButton", () => {
     expect(screen.queryByText("algo")).not.toBeInTheDocument();
   });
 
+  it("não oferece Aceitar quando a sugestão vem vazia (200 malformado)", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(
+      JSON.stringify({}), { status: 200 },
+    )));
+    const onAccept = vi.fn();
+    render(<AssistButton field="meta.description" context={ctx} onAccept={onAccept} />);
+    fireEvent.click(screen.getByRole("button", { name: "Sugerir meta.description" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Sugerir meta.description" })).not.toBeDisabled(),
+    );
+    expect(screen.queryByRole("button", { name: "Aceitar" })).not.toBeInTheDocument();
+    expect(onAccept).not.toHaveBeenCalled();
+  });
+
   it("desabilita quando o assist responde 501", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 501 })));
     render(<AssistButton field="meta.description" context={ctx} onAccept={vi.fn()} />);
