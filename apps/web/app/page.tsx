@@ -19,8 +19,18 @@ export default function Home() {
   async function onDelete(id: string) { await removeProject(id); await refresh(); }
 
   return (
-    <main style={{ padding: 24, maxWidth: 720, margin: "0 auto" }}>
-      <h1>SDD Terminal</h1>
+    <main className="home">
+      <div className="home__hero">
+        <p className="eyebrow">spec-driven · superpowers</p>
+        <h1 className="home__title title">
+          SDD Terminal<span className="cursor" aria-hidden="true" />
+        </h1>
+        <p className="home__sub">
+          Descreva o projeto uma vez. Saia com um repositório pré-cabeado para um time
+          de agentes trabalhar com spec, TDD e safety harness.
+        </p>
+      </div>
+
       <ProjectList projects={projects} onOpen={(id) => router.push(`/project/${id}`)}
         onDelete={onDelete} onNew={onNew} />
     </main>

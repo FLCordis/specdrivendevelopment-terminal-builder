@@ -10,31 +10,27 @@ export function SectionNav({
   onSelect: (id: string) => void;
 }) {
   return (
-    <nav>
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {sections.map((s) => {
-          const count = pending[s.id] ?? 0;
-          const label = count > 0 ? `${s.label}, ${count} pendências` : s.label;
-          return (
-            <li key={s.id}>
-              <button
-                type="button"
-                aria-label={label}
-                onClick={() => onSelect(s.id)}
-                style={{
-                  display: "flex", justifyContent: "space-between", width: "100%",
-                  background: s.id === activeId ? "#004d14" : "none",
-                  color: "#00ff41", border: "none", borderBottom: "1px solid #004d14",
-                  cursor: "pointer", fontFamily: "inherit", padding: 8, textAlign: "left",
-                }}
-              >
-                <span>{s.label}</span>
-                {count > 0 ? <span style={{ color: "#ffb000" }}>{count}</span> : null}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+    <nav className="nav">
+      {sections.map((s) => {
+        const count = pending[s.id] ?? 0;
+        const label =
+          count > 0
+            ? `${s.label}, ${count} ${count === 1 ? "pendência" : "pendências"}`
+            : s.label;
+        return (
+          <button
+            key={s.id}
+            type="button"
+            aria-label={label}
+            aria-current={s.id === activeId ? "true" : undefined}
+            onClick={() => onSelect(s.id)}
+            className={`nav__item${s.id === activeId ? " is-active" : ""}`}
+          >
+            <span className="nav__label">{s.label}</span>
+            {count > 0 ? <span className="nav__badge">{count}</span> : null}
+          </button>
+        );
+      })}
     </nav>
   );
 }

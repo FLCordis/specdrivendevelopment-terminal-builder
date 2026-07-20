@@ -36,38 +36,41 @@ export function FeaturesEditor({
 
   return (
     <div>
-      <p style={{ color: "#00bb30" }}>
-        Features sem dependência rodam em paralelo. Use "depende de" para serializar.
+      <p className="hint" style={{ marginTop: 0, marginBottom: 16 }}>
+        Features sem dependência rodam em paralelo. Use “depende de” para serializar.
       </p>
 
       {features.map((f, i) => (
-        <fieldset key={i} style={{ border: "1px solid #009922", marginBottom: 12, padding: 8 }}>
-          <legend style={{ color: "#00ff41" }}>Feature {i + 1}</legend>
+        <fieldset key={i} className="feat">
+          <legend className="feat__legend">FEATURE {i + 1}</legend>
 
-          <label style={{ display: "block", marginBottom: 6 }}>
-            <span>Nome</span>
-            <input
-              aria-label={`Nome da feature ${i + 1}`}
-              value={f.name}
-              onChange={(e) => renameFeature(i, e.target.value)}
-              style={{ display: "block", width: "100%", background: "#040a04",
-                color: "#00ff41", border: "1px solid #009922", padding: 6, fontFamily: "inherit" }}
-            />
-          </label>
+          <div className="field">
+            <label>
+              <span className="field__label">Nome</span>
+              <input
+                className="input"
+                aria-label={`Nome da feature ${i + 1}`}
+                value={f.name}
+                onChange={(e) => renameFeature(i, e.target.value)}
+              />
+            </label>
+          </div>
 
-          <label style={{ display: "block", marginBottom: 6 }}>
-            <span>Semente de spec</span>
-            <input
-              aria-label={`Semente da feature ${i + 1}`}
-              value={f.specSeed}
-              onChange={(e) => patch(i, { specSeed: e.target.value })}
-              style={{ display: "block", width: "100%", background: "#040a04",
-                color: "#00ff41", border: "1px solid #009922", padding: 6, fontFamily: "inherit" }}
-            />
-          </label>
+          <div className="field">
+            <label>
+              <span className="field__label">Semente de spec</span>
+              <input
+                className="input"
+                aria-label={`Semente da feature ${i + 1}`}
+                value={f.specSeed}
+                onChange={(e) => patch(i, { specSeed: e.target.value })}
+              />
+            </label>
+          </div>
 
-          <div style={{ marginBottom: 6 }}>
-            <span style={{ color: "#00bb30" }}>Depende de:</span>
+          <div className="field">
+            <span className="field__label">Depende de</span>
+            <div className="deps">
             {(() => {
               // só features com nome não-vazio podem ser dependência
               // (o roadmap identifica por nome; sem nome não há como referenciar)
@@ -75,12 +78,10 @@ export function FeaturesEditor({
                 .map((other, j) => ({ other, j }))
                 .filter(({ other, j }) => j !== i && other.name.trim() !== "");
               if (options.length === 0) {
-                return (
-                  <small style={{ color: "#00bb30" }}> (nenhuma outra feature nomeada)</small>
-                );
+                return <small className="hint">(nenhuma outra feature nomeada)</small>;
               }
               return options.map(({ other, j }) => (
-                <label key={j} style={{ marginLeft: 8 }}>
+                <label key={j} className="dep">
                   <input
                     type="checkbox"
                     aria-label={`Feature ${i + 1} depende de ${other.name}`}
@@ -91,14 +92,14 @@ export function FeaturesEditor({
                 </label>
               ));
             })()}
+            </div>
           </div>
 
           <button
             type="button"
+            className="btn btn--danger"
             aria-label={`Remover feature ${i + 1}`}
             onClick={() => onChange(features.filter((_, j) => j !== i))}
-            style={{ background: "none", color: "#ff4444", border: "1px solid #009922",
-              cursor: "pointer", fontFamily: "inherit", padding: "2px 8px" }}
           >
             Remover
           </button>
@@ -107,9 +108,8 @@ export function FeaturesEditor({
 
       <button
         type="button"
+        className="btn btn--primary"
         onClick={() => onChange([...features, { name: "", specSeed: "", dependsOn: [] }])}
-        style={{ background: "#004d14", color: "#00ff41", border: "1px solid #009922",
-          cursor: "pointer", fontFamily: "inherit", padding: "6px 12px" }}
       >
         Adicionar feature
       </button>

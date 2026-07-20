@@ -11,22 +11,38 @@ export function ProjectList({
 }) {
   return (
     <div>
-      <button onClick={onNew} style={{ marginBottom: 16, background: "#004d14",
-        color: "#00ff41", border: "1px solid #009922", padding: "6px 12px",
-        fontFamily: "inherit", cursor: "pointer" }}>
+      <button type="button" className="btn btn--primary" onClick={onNew}>
         Novo projeto
       </button>
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {projects.map((p) => (
-          <li key={p.id} style={{ display: "flex", justifyContent: "space-between",
-            borderBottom: "1px solid #004d14", padding: "8px 0" }}>
-            <span onClick={() => onOpen(p.id)} style={{ cursor: "pointer" }}>{p.name}</span>
-            <button onClick={() => onDelete(p.id)} aria-label={`Excluir ${p.name}`}
-              style={{ background: "none", color: "#ff4444", border: "none",
-                cursor: "pointer", fontFamily: "inherit" }}>×</button>
-          </li>
-        ))}
-      </ul>
+
+      {projects.length === 0 ? (
+        <p className="empty">Nenhum projeto ainda. Crie o primeiro para começar.</p>
+      ) : (
+        <ul className="projlist">
+          {projects.map((p) => (
+            <li key={p.id} className="projitem">
+              <button
+                type="button"
+                className="projitem__open"
+                onClick={() => onOpen(p.id)}
+              >
+                {p.name}
+              </button>
+              <span className="projitem__meta">
+                {new Date(p.updatedAt).toLocaleDateString("pt-BR")}
+              </span>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={() => onDelete(p.id)}
+                aria-label={`Excluir ${p.name}`}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

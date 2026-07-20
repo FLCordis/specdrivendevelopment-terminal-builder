@@ -28,23 +28,19 @@ export function TextAreaField({
   }
 
   return (
-    <div style={{ marginBottom: 12 }}>
-      <label style={{ display: "block" }}>
-        <span style={{ color: "#00ff41" }}>{label}</span>
+    <div className="field">
+      <label>
+        <span className="field__label">{label}</span>
         <textarea
+          className="textarea"
           aria-label={label}
           rows={rows}
           value={text}
           onChange={(e) => handle(e.target.value)}
-          style={{
-            display: "block", width: "100%", background: "#040a04",
-            color: "#00ff41", border: "1px solid #009922", padding: 6,
-            fontFamily: "inherit",
-          }}
         />
       </label>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-        {hint ? <small style={{ color: "#00bb30" }}>{hint}</small> : <span />}
+      <div className="field__foot">
+        {hint ? <small className="hint">{hint}</small> : <span />}
         {assist}
       </div>
     </div>

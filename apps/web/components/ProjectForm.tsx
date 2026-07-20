@@ -39,23 +39,24 @@ export function ProjectForm({
   if (sectionId === "inicio") {
     return (
       <div>
-        <label style={{ display: "block", marginBottom: 12 }}>
-          <span>Arquétipo do projeto</span>
-          <select
-            aria-label="Arquétipo do projeto"
-            value={archetype}
-            onChange={(e) => onReplaceState(applyArchetype(state, e.target.value as ArchetypeId))}
-            style={{ display: "block", width: "100%", background: "#040a04",
-              color: "#00ff41", border: "1px solid #009922", padding: 6, fontFamily: "inherit" }}
-          >
-            {ARCHETYPE_LIST.map((a) => (
-              <option key={a.id} value={a.id}>{a.label}</option>
-            ))}
-          </select>
-          <small style={{ color: "#00bb30" }}>
+        <div className="field">
+          <label>
+            <span className="field__label">Arquétipo do projeto</span>
+            <select
+              className="select"
+              aria-label="Arquétipo do projeto"
+              value={archetype}
+              onChange={(e) => onReplaceState(applyArchetype(state, e.target.value as ArchetypeId))}
+            >
+              {ARCHETYPE_LIST.map((a) => (
+                <option key={a.id} value={a.id}>{a.label}</option>
+              ))}
+            </select>
+          </label>
+          <small className="hint">
             Preenche defaults sensatos e esconde perguntas irrelevantes. Não sobrescreve o que você já escreveu.
           </small>
-        </label>
+        </div>
 
         <Field
           label="Nome do projeto"
@@ -117,18 +118,19 @@ export function ProjectForm({
           onChange={(v) => onUpdate("quality.testStrategy", v)}
           hint={hint("quality.testStrategy")}
         />
-        <label style={{ display: "block", marginBottom: 12 }}>
-          <span>Alvo de cobertura (%)</span>
-          <input
-            type="number" min={0} max={100}
-            aria-label="Alvo de cobertura (%)"
-            value={state.quality.coverageTarget}
-            onChange={(e) => onUpdate("quality.coverageTarget", Number(e.target.value))}
-            style={{ display: "block", width: "100%", background: "#040a04",
-              color: "#00ff41", border: "1px solid #009922", padding: 6, fontFamily: "inherit" }}
-          />
-        </label>
-        <label style={{ display: "block", marginBottom: 12 }}>
+        <div className="field">
+          <label>
+            <span className="field__label">Alvo de cobertura (%)</span>
+            <input
+              className="input"
+              type="number" min={0} max={100}
+              aria-label="Alvo de cobertura (%)"
+              value={state.quality.coverageTarget}
+              onChange={(e) => onUpdate("quality.coverageTarget", Number(e.target.value))}
+            />
+          </label>
+        </div>
+        <label className="checkline">
           <input
             type="checkbox" aria-label="Usa CI"
             checked={state.quality.ci}
@@ -157,7 +159,7 @@ export function ProjectForm({
             hint={hint("security.gates")}
           />
         ) : null}
-        <label style={{ display: "block", marginBottom: 12 }}>
+        <label className="checkline">
           <input
             type="checkbox" aria-label="Usa Git"
             checked={state.meta.useGit}

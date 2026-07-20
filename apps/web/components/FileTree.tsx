@@ -10,24 +10,20 @@ export function FileTree({
   depth?: number;
 }) {
   return (
-    <ul style={{ listStyle: "none", padding: 0, margin: 0, marginLeft: depth ? 12 : 0 }}>
+    <ul className={`tree${depth ? " tree--nested" : ""}`}>
       {nodes.map((node) => (
-        <li key={node.path}>
+        <li key={`${node.isFile ? "f" : "d"}:${node.path}`}>
           {node.isFile ? (
             <button
               type="button"
               onClick={() => onSelect(node.path)}
-              style={{
-                background: node.path === selectedPath ? "#004d14" : "none",
-                color: "#00ff41", border: "none", cursor: "pointer",
-                fontFamily: "inherit", textAlign: "left", width: "100%", padding: 2,
-              }}
+              className={`tree__file${node.path === selectedPath ? " is-active" : ""}`}
             >
               {node.name}
             </button>
           ) : (
             <>
-              <span style={{ color: "#00bb30" }}>{node.name}</span>
+              <span className="tree__folder">{node.name}</span>
               <FileTree
                 nodes={node.children} selectedPath={selectedPath}
                 onSelect={onSelect} depth={depth + 1}

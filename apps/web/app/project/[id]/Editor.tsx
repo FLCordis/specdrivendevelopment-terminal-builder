@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import type { ProjectState } from "@sdd/engine";
 import { useProject } from "@/hooks/useProject";
 import { useLivePreview } from "@/hooks/useLivePreview";
@@ -14,9 +15,11 @@ export function Editor({ id }: { id: string }) {
   const [sectionId, setSectionId] = useState("inicio");
   const { files, validation, error } = useLivePreview(state);
 
-  if (loading || !state) return <p>Carregando…</p>;
+  if (loading || !state) return <p className="out__empty">Carregando…</p>;
 
   const pending = validation ? sectionStatus(state, validation) : {};
+  const section = SECTIONS.find((s) => s.id === sectionId);
+  const totalPending = Object.values(pending).reduce((a, b) => a + b, 0);
 
   function replaceState(next: ProjectState) {
     // aplica o estado inteiro campo a campo, reusando o autosave do useProject
@@ -28,30 +31,49 @@ export function Editor({ id }: { id: string }) {
   }
 
   return (
-    <main style={{ display: "grid", gridTemplateColumns: "200px 1fr 1fr", gap: 24, padding: 24 }}>
-      <aside>
-        <SectionNav
-          sections={SECTIONS} activeId={sectionId} pending={pending} onSelect={setSectionId}
-        />
+    <div className="app">
+      <header className="cmdbar">
+        <Link href="/" className="btn btn--ghost">← projetos</Link>
+        <span className="cmdbar__prompt">
+          sdd ▸ <b>{state.meta.name || "sem-nome"}</b>
+          <span className="cursor" aria-hidden="true" />
+        </span>
+        <span className="cmdbar__sp" />
+        <span className="eyebrow">
+          {totalPending > 0
+            ? `${totalPending} ${totalPending === 1 ? "pendência" : "pendências"}`
+            : "spec completa"}
+        </span>
         <button
+          type="button"
+          className="btn btn--primary"
           onClick={() => downloadZip(state, `${state.meta.name || "projeto"}.zip`)}
-          style={{ marginTop: 16, width: "100%", background: "#004d14", color: "#00ff41",
-            border: "1px solid #009922", cursor: "pointer", fontFamily: "inherit", padding: 8 }}
         >
           Baixar ZIP
         </button>
-      </aside>
+      </header>
 
-      <section>
-        <ProjectForm
-          sectionId={sectionId} state={state} onUpdate={update} onReplaceState={replaceState}
-        />
-      </section>
+      <main className="editor">
+        <aside className="zone zone--rail">
+          <SectionNav
+            sections={SECTIONS} activeId={sectionId} pending={pending} onSelect={setSectionId}
+          />
+        </aside>
 
-      <section>
-        {error ? <p style={{ color: "#ff4444" }}>{error}</p> : null}
-        <FilePreview files={files} />
-      </section>
-    </main>
+        <section className="zone">
+          <div className="section-head">
+            <h2>{section?.label}</h2>
+          </div>
+          <ProjectForm
+            sectionId={sectionId} state={state} onUpdate={update} onReplaceState={replaceState}
+          />
+        </section>
+
+        <section className="zone zone--out">
+          {error ? <p className="out__err">{error}</p> : null}
+          <FilePreview files={files} />
+        </section>
+      </main>
+    </div>
   );
 }
