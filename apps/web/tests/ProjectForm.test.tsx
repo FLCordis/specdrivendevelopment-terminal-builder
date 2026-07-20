@@ -55,4 +55,13 @@ describe("ProjectForm", () => {
     );
     expect(screen.getByRole("button", { name: "Adicionar feature" })).toBeInTheDocument();
   });
+
+  it("não crasha com archetype desconhecido (fallback para generic)", () => {
+    const weird = ProjectStateSchema.parse({ domain: { archetype: "inexistente" } });
+    render(
+      <ProjectForm sectionId="seguranca" state={weird} onUpdate={vi.fn()} onReplaceState={vi.fn()} />,
+    );
+    // generic mostra tudo → threat model visível, sem lançar
+    expect(screen.getByLabelText("Threat model")).toBeInTheDocument();
+  });
 });

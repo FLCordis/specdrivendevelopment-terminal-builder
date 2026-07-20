@@ -23,7 +23,13 @@ export function ProjectForm({
   onUpdate: (path: string, value: unknown) => void;
   onReplaceState: (next: ProjectState) => void;
 }) {
-  const archetype = state.domain.archetype as ArchetypeId;
+  // fallback para "generic" se o archetype for um valor desconhecido
+  // (ex.: JSON importado com archetype inválido) — evita crash do editor
+  const archetype: ArchetypeId = ARCHETYPE_LIST.some(
+    (a) => a.id === state.domain.archetype,
+  )
+    ? (state.domain.archetype as ArchetypeId)
+    : "generic";
   const visible = (path: string) => isFieldVisible(archetype, path);
   const hint = (path: string) => hintFor(archetype, path);
   const assistFor = (path: string) => (
