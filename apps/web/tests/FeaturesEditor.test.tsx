@@ -50,4 +50,32 @@ describe("FeaturesEditor", () => {
       { ...features[1], dependsOn: ["Catálogo"] },
     ]);
   });
+
+  it("renomear cascateia o novo nome nos dependsOn das outras", () => {
+    const wired: Feature[] = [
+      { name: "Catálogo", specSeed: "CRUD", dependsOn: [] },
+      { name: "Pedidos", specSeed: "checkout", dependsOn: ["Catálogo"] },
+    ];
+    const onChange = vi.fn();
+    render(<FeaturesEditor features={wired} onChange={onChange} />);
+    fireEvent.change(screen.getByLabelText("Nome da feature 1"), {
+      target: { value: "Catálogo v2" },
+    });
+    expect(onChange).toHaveBeenCalledWith([
+      { ...wired[0], name: "Catálogo v2" },
+      { ...wired[1], dependsOn: ["Catálogo v2"] },
+    ]);
+  });
+
+  it("não oferece feature sem nome como dependência", () => {
+    const mixed: Feature[] = [
+      { name: "Catálogo", specSeed: "", dependsOn: [] },
+      { name: "", specSeed: "", dependsOn: [] },
+    ];
+    render(<FeaturesEditor features={mixed} onChange={vi.fn()} />);
+    // feature 2 (sem nome) não pode ser dependência da feature 1
+    expect(screen.getByText("(nenhuma outra feature nomeada)")).toBeInTheDocument();
+    // mas a feature 2 pode depender da feature 1 (que tem nome)
+    expect(screen.getByLabelText("Feature 2 depende de Catálogo")).toBeInTheDocument();
+  });
 });

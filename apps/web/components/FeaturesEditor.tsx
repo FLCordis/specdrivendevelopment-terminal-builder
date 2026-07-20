@@ -11,6 +11,21 @@ export function FeaturesEditor({
     onChange(features.map((f, i) => (i === index ? { ...f, ...next } : f)));
   }
 
+  // Renomear cascateia o novo nome nos dependsOn das outras features,
+  // para as dependências não ficarem apontando para o nome antigo (órfãs).
+  function renameFeature(index: number, newName: string) {
+    const oldName = features[index].name;
+    onChange(
+      features.map((f, i) => {
+        if (i === index) return { ...f, name: newName };
+        if (oldName && f.dependsOn.includes(oldName)) {
+          return { ...f, dependsOn: f.dependsOn.map((d) => (d === oldName ? newName : d)) };
+        }
+        return f;
+      }),
+    );
+  }
+
   function toggleDep(index: number, depName: string) {
     const current = features[index].dependsOn;
     const next = current.includes(depName)
@@ -34,7 +49,7 @@ export function FeaturesEditor({
             <input
               aria-label={`Nome da feature ${i + 1}`}
               value={f.name}
-              onChange={(e) => patch(i, { name: e.target.value })}
+              onChange={(e) => renameFeature(i, e.target.value)}
               style={{ display: "block", width: "100%", background: "#040a04",
                 color: "#00ff41", border: "1px solid #009922", padding: 6, fontFamily: "inherit" }}
             />
@@ -53,23 +68,29 @@ export function FeaturesEditor({
 
           <div style={{ marginBottom: 6 }}>
             <span style={{ color: "#00bb30" }}>Depende de:</span>
-            {features.filter((_, j) => j !== i).length === 0 ? (
-              <small style={{ color: "#00bb30" }}> (nenhuma outra feature)</small>
-            ) : (
-              features.map((other, j) =>
-                j === i ? null : (
-                  <label key={j} style={{ marginLeft: 8 }}>
-                    <input
-                      type="checkbox"
-                      aria-label={`Feature ${i + 1} depende de ${other.name}`}
-                      checked={f.dependsOn.includes(other.name)}
-                      onChange={() => toggleDep(i, other.name)}
-                    />
-                    {other.name || `(feature ${j + 1})`}
-                  </label>
-                ),
-              )
-            )}
+            {(() => {
+              // só features com nome não-vazio podem ser dependência
+              // (o roadmap identifica por nome; sem nome não há como referenciar)
+              const options = features
+                .map((other, j) => ({ other, j }))
+                .filter(({ other, j }) => j !== i && other.name.trim() !== "");
+              if (options.length === 0) {
+                return (
+                  <small style={{ color: "#00bb30" }}> (nenhuma outra feature nomeada)</small>
+                );
+              }
+              return options.map(({ other, j }) => (
+                <label key={j} style={{ marginLeft: 8 }}>
+                  <input
+                    type="checkbox"
+                    aria-label={`Feature ${i + 1} depende de ${other.name}`}
+                    checked={f.dependsOn.includes(other.name)}
+                    onChange={() => toggleDep(i, other.name)}
+                  />
+                  {other.name}
+                </label>
+              ));
+            })()}
           </div>
 
           <button
