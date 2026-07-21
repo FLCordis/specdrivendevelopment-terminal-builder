@@ -44,6 +44,7 @@ export function Editor({ id }: { id: string }) {
             ? `${totalPending} ${totalPending === 1 ? "pendência" : "pendências"}`
             : "spec completa"}
         </span>
+        <Link href="/settings" className="cmdbar__link">⚙</Link>
         <button
           type="button"
           className="btn btn--primary"
@@ -60,8 +61,9 @@ export function Editor({ id }: { id: string }) {
           />
         </aside>
 
-        <section className="zone">
+        <section className="zone zone--form">
           <div className="section-head">
+            <p className="eyebrow">seção</p>
             <h2>{section?.label}</h2>
           </div>
           <ProjectForm

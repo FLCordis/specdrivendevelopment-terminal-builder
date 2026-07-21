@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ProjectList } from "@/components/ProjectList";
 import { listProjects, createProject, removeProject } from "@/lib/projects";
 import type { Project } from "@/lib/db";
 
@@ -9,30 +8,116 @@ export default function Home() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
 
-  async function refresh() { setProjects(await listProjects()); }
-  useEffect(() => { void refresh(); }, []);
+  async function refresh() {
+    setProjects(await listProjects());
+  }
+  useEffect(() => {
+    void refresh();
+  }, []);
 
   async function onNew() {
     const p = await createProject();
     router.push(`/project/${p.id}`);
   }
-  async function onDelete(id: string) { await removeProject(id); await refresh(); }
+  async function onDelete(id: string) {
+    await removeProject(id);
+    await refresh();
+  }
 
   return (
-    <main className="home">
-      <div className="home__hero">
-        <p className="eyebrow">spec-driven · superpowers</p>
-        <h1 className="home__title title">
-          SDD Terminal<span className="cursor" aria-hidden="true" />
-        </h1>
-        <p className="home__sub">
-          Descreva o projeto uma vez. Saia com um repositório pré-cabeado para um time
-          de agentes trabalhar com spec, TDD e safety harness.
-        </p>
-      </div>
+    <div className="app">
+      <header className="cmdbar">
+        <span className="cmdbar__brand">
+          <span className="cmdbar__dot" /> SDD&nbsp;Terminal
+        </span>
+        <span className="cmdbar__sp" />
+        <a className="cmdbar__link" href="/settings">
+          ⚙ Configurações
+        </a>
+      </header>
 
-      <ProjectList projects={projects} onOpen={(id) => router.push(`/project/${id}`)}
-        onDelete={onDelete} onNew={onNew} />
-    </main>
+      <main className="home">
+        <section className="hero">
+          <span className="hero__kicker reveal">
+            <span className="cmdbar__dot" /> powered by Superpowers
+          </span>
+          <h1 className="hero__title reveal d1">
+            Orquestre um <span className="accent">time de IA</span> para
+            construir seu software.
+          </h1>
+          <p className="hero__sub reveal d2">
+            Responda um formulário sobre o projeto e gere um scaffold
+            pré-cabeado para desenvolvimento agêntico: subagent-driven, TDD e
+            safety harness — pronto para abrir no Claude Code.
+          </p>
+          <div className="hero__cta reveal d3">
+            <button className="btn btn--primary btn--lg" onClick={onNew}>
+              Novo projeto →
+            </button>
+            <a className="btn btn--lg" href="/settings">
+              Configurar IA
+            </a>
+          </div>
+
+          <div className="termcard reveal d4" aria-hidden="true">
+            <div className="termcard__bar">
+              <i />
+              <i />
+              <i />
+              <span>~/loja-api · gerado pelo SDD Terminal</span>
+            </div>
+            <div className="termcard__body">
+              <span className="c"># o que sai no .zip</span>
+              {"\n"}
+              <span className="k">CLAUDE.md</span>{"          "}
+              <span className="c">constituição — manda usar Superpowers</span>
+              {"\n"}
+              <span className="k">docs/superpowers/</span>{"  "}
+              <span className="c">SPEC + contexto + roadmap</span>
+              {"\n"}
+              <span className="k">.claude/hooks/</span>{"     "}
+              <span className="c">guard-destructive (bloqueia rm -rf, push)</span>
+              {"\n\n"}
+              <span className="p">▸</span> abra no Claude Code:{" "}
+              <span className="k">&quot;comece a primeira feature&quot;</span>
+              <span className="cursor" />
+            </div>
+          </div>
+        </section>
+
+        <div className="section-title">
+          <h2>seus projetos</h2>
+          <span className="rule" />
+        </div>
+
+        <div className="grid-cards">
+          <button className="card card--new" onClick={onNew}>
+            {projects.length === 0
+              ? "＋ Criar seu primeiro projeto"
+              : "＋ Criar projeto"}
+          </button>
+          {projects.map((p) => (
+            <div className="card" key={p.id}>
+              <button
+                className="card__open"
+                onClick={() => router.push(`/project/${p.id}`)}
+              >
+                {p.name}
+              </button>
+              <span className="card__meta">
+                editado {new Date(p.updatedAt).toLocaleDateString("pt-BR")}
+              </span>
+              <button
+                className="card__del"
+                aria-label={`Excluir ${p.name}`}
+                onClick={() => onDelete(p.id)}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
   );
 }

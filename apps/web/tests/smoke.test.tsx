@@ -10,7 +10,8 @@ vi.mock("next/navigation", () => ({
 
 test("renderiza a home e o engine é importável no client", () => {
   render(<Home />);
-  expect(screen.getByRole("heading", { level: 1, name: "SDD Terminal" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Novo projeto/ })).toBeInTheDocument();
   const state = ProjectStateSchema.parse({});
   expect(state.meta.useGit).toBe(true);
 });

@@ -13,6 +13,7 @@ export function FilePreview({ files }: { files: GeneratedFile[] }) {
   return (
     <div className="out">
       <div className="out__tree">
+        <p className="out__head">output ({files.length})</p>
         <FileTree
           nodes={buildTree(files)}
           selectedPath={current.path}

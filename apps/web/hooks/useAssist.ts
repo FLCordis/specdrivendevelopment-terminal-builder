@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useRef, useState } from "react";
 import type { ProjectState } from "@sdd/engine";
+import { getAiConfig } from "../lib/settings";
 
 export type AssistStatus = "idle" | "loading" | "error" | "disabled";
 
@@ -18,10 +19,18 @@ export function useAssist() {
       setStatus("loading");
       setError(null);
       try {
+        // config de IA vive no browser (Configurações); getAiConfig nunca lança
+        const cfg = await getAiConfig();
         const res = await fetch("/api/assist", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ field, context }),
+          body: JSON.stringify({
+            field,
+            context,
+            ...(cfg
+              ? { provider: cfg.provider, apiKey: cfg.apiKey, model: cfg.model, baseUrl: cfg.baseUrl }
+              : {}),
+          }),
         });
         if (res.status === 501) {
           disabledRef.current = true;

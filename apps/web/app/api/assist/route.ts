@@ -1,18 +1,47 @@
 import { NextResponse } from "next/server";
-import { createAnthropicProvider } from "@/lib/assist/anthropic";
 import type { AssistInput } from "@/lib/assist/provider";
+import type { AiConfig, ProviderId } from "@/lib/settings";
+import { callProvider } from "@/lib/assist/call-provider";
+
+interface AssistBody extends Partial<AssistInput> {
+  provider?: ProviderId;
+  apiKey?: string;
+  model?: string;
+  baseUrl?: string;
+}
+
+/** Resolve a config efetiva: chave do cliente tem prioridade; se ausente,
+ *  cai para a env var ANTHROPIC_API_KEY (compat com o comportamento antigo). */
+function resolveConfig(body: AssistBody): AiConfig | null {
+  if (body.apiKey && typeof body.apiKey === "string") {
+    return {
+      provider: body.provider ?? "anthropic",
+      apiKey: body.apiKey,
+      model: body.model ?? "",
+      baseUrl: body.baseUrl,
+    };
+  }
+  const envKey = process.env.ANTHROPIC_API_KEY;
+  if (envKey) {
+    return { provider: "anthropic", apiKey: envKey, model: body.model ?? "" };
+  }
+  return null;
+}
 
 export async function POST(req: Request): Promise<Response> {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) {
-    return NextResponse.json({ error: "assist desligado" }, { status: 501 });
-  }
-
-  let body: Partial<AssistInput>;
+  let body: AssistBody;
   try {
-    body = (await req.json()) as Partial<AssistInput>;
+    body = (await req.json()) as AssistBody;
   } catch {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const cfg = resolveConfig(body);
+  if (!cfg) {
+    return NextResponse.json(
+      { error: "assist desligado — configure a IA em Configurações" },
+      { status: 501 },
+    );
   }
 
   if (!body.field || typeof body.field !== "string") {
@@ -20,8 +49,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   try {
-    const provider = createAnthropicProvider(key);
-    const result = await provider.suggest({
+    const result = await callProvider(cfg, {
       field: body.field,
       context: body.context ?? {},
       instruction: body.instruction,

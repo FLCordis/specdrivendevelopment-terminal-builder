@@ -36,7 +36,7 @@ export function FeaturesEditor({
 
   return (
     <div>
-      <p className="hint" style={{ marginTop: 0, marginBottom: 16 }}>
+      <p className="feat-lead">
         Features sem dependência rodam em paralelo. Use “depende de” para serializar.
       </p>
 

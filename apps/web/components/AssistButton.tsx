@@ -21,7 +21,7 @@ export function AssistButton({
           className="assist__btn"
           aria-label={`Sugerir ${field}`}
           disabled={disabled || status === "loading"}
-          title={disabled ? "Assist desligado (sem ANTHROPIC_API_KEY)" : "Sugerir com IA"}
+          title={disabled ? "Assist desligado — configure a IA em Configurações" : "Sugerir com IA"}
           onClick={() => void suggest(field, context)}
         >
           {status === "loading" ? "…" : "✨"}
@@ -31,17 +31,18 @@ export function AssistButton({
       {suggestion ? (
         <span className="assist__box">
           <span className="assist__text">{suggestion}</span>
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={() => { onAccept(suggestion); clear(); }}
-            style={{ marginRight: 8 }}
-          >
-            Aceitar
-          </button>
-          <button type="button" className="btn btn--danger" onClick={clear}>
-            Descartar
-          </button>
+          <span className="assist__actions">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={() => { onAccept(suggestion); clear(); }}
+            >
+              Aceitar
+            </button>
+            <button type="button" className="btn btn--danger" onClick={clear}>
+              Descartar
+            </button>
+          </span>
         </span>
       ) : null}
     </span>
