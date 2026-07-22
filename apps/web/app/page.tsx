@@ -29,7 +29,7 @@ export default function Home() {
     <div className="app">
       <header className="cmdbar">
         <span className="cmdbar__brand">
-          <span className="cmdbar__dot" /> SDD&nbsp;Terminal
+          <span className="cmdbar__dot" /> Cordis&nbsp;Forge
         </span>
         <span className="cmdbar__sp" />
         <a className="cmdbar__link" href="/settings">
@@ -65,7 +65,7 @@ export default function Home() {
               <i />
               <i />
               <i />
-              <span>~/loja-api · gerado pelo SDD Terminal</span>
+              <span>~/loja-api · gerado pelo Cordis Forge</span>
             </div>
             <TermStream />
           </div>

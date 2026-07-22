@@ -15,7 +15,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SDD Terminal — orquestre times de IA",
+  title: "Cordis Forge — orquestre times de IA",
   description:
     "Monte a especificação de um projeto e gere um scaffold pré-cabeado para desenvolvimento agêntico com Superpowers (subagent-driven + TDD + safety harness).",
 };

@@ -52,7 +52,7 @@ export default function SettingsPage() {
       <header className="cmdbar">
         <Link href="/" className="btn btn--ghost">← projetos</Link>
         <span className="cmdbar__prompt">
-          sdd ▸ <b>configurações</b>
+          forge ▸ <b>configurações</b>
         </span>
         <span className="cmdbar__sp" />
         <span className="eyebrow">
