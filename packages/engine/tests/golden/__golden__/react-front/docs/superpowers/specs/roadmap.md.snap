@@ -1,0 +1,8 @@
+# Roadmap
+
+Cada feature é uma unidade de paralelismo. Respeite `depends_on` — features sem dependência podem ser despachadas em paralelo (`superpowers:dispatching-parallel-agents`).
+
+## 001 — Gráficos
+
+- **Semente:** renderizar séries
+- **depends_on: (nenhuma)**

@@ -1,0 +1,10 @@
+# Arquitetura
+
+<architecture>
+- **Stack:** Node
+- **Estilo:** simples
+</architecture>
+
+## Princípio
+
+KISS — a solução mais simples que atende ao SPEC. Novas dependências exigem justificativa.

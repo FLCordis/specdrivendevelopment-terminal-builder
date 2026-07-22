@@ -1,0 +1,36 @@
+# Design — Rascunho
+
+**Status:** Aprovado (gerado pelo SDD Terminal — tratar como brainstorming concluído)
+**Data:** 2026-07-14
+
+<project_scope>
+Rascunho é um projeto do tipo **script**. protótipo
+</project_scope>
+
+## Casos de uso
+
+- experimentar
+
+## Não-objetivos
+
+- [NEEDS CLARIFICATION: não-objetivos]
+
+## Restrições (não-funcionais)
+
+- [NEEDS CLARIFICATION: restrições]
+
+<architecture>
+Stack: Node. Estilo: simples.
+Ver `_context/architecture.md` para justificativa e detalhes.
+</architecture>
+
+<acceptance_criteria>
+- Todos os casos de uso acima cobertos por teste.
+- Estratégia de testes: manual (alvo de cobertura: 0%).
+- Gates de segurança aprovados (ver `_context/security.md`).
+- **Definition of done:** [NEEDS CLARIFICATION: definition of done]
+</acceptance_criteria>
+
+## Próximo passo
+
+Use `superpowers:writing-plans` para transformar cada feature do `roadmap.md` em um plano de implementação com tasks TDD.

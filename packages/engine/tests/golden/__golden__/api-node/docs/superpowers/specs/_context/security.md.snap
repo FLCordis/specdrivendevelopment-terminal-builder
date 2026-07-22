@@ -1,0 +1,16 @@
+# Segurança
+
+## Threat model
+
+OWASP top 10
+
+<security_rules>
+Gates obrigatórios (precisam passar antes de concluir uma feature):
+
+- sec-review
+- deps-audit
+</security_rules>
+
+## Ações destrutivas
+
+O safety harness em `.claude/` bloqueia comandos destrutivos (rm -rf, DROP/TRUNCATE, push/merge no branch principal). Elas exigem validação humana explícita.

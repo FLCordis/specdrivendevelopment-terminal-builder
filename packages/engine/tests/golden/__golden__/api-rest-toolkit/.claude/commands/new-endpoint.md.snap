@@ -1,0 +1,14 @@
+---
+description: Checklist TDD para adicionar um novo endpoint REST.
+argument-hint: <recurso>
+---
+Adicione um novo endpoint para: $ARGUMENTS
+
+Siga a skill `rest-endpoint-tdd` à risca:
+
+1. Defina o contrato (method, path, request, response, status codes) como comentário no teste.
+2. Escreva o teste de integração que FALHA (request real → resposta esperada). Rode e confirme a falha.
+3. Valide input na borda (400 antes da regra de negócio).
+4. Implemente o mínimo pra passar.
+5. Erros conforme `http-error-taxonomy`.
+6. Rode a suíte inteira e o subagente `api-security-reviewer` antes de concluir.

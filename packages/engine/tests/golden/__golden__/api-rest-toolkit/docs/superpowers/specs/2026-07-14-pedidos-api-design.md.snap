@@ -1,0 +1,36 @@
+# Design — Pedidos API
+
+**Status:** Aprovado (gerado pelo SDD Terminal — tratar como brainstorming concluído)
+**Data:** 2026-07-14
+
+<project_scope>
+Pedidos API é um projeto do tipo **API REST**. API de pedidos
+</project_scope>
+
+## Casos de uso
+
+- criar pedido
+
+## Não-objetivos
+
+- [NEEDS CLARIFICATION: não-objetivos]
+
+## Restrições (não-funcionais)
+
+- [NEEDS CLARIFICATION: restrições]
+
+<architecture>
+Stack: Node + TypeScript. Estilo: hexagonal.
+Ver `_context/architecture.md` para justificativa e detalhes.
+</architecture>
+
+<acceptance_criteria>
+- Todos os casos de uso acima cobertos por teste.
+- Estratégia de testes: TDD (alvo de cobertura: 90%).
+- Gates de segurança aprovados (ver `_context/security.md`).
+- **Definition of done:** [NEEDS CLARIFICATION: definition of done]
+</acceptance_criteria>
+
+## Próximo passo
+
+Use `superpowers:writing-plans` para transformar cada feature do `roadmap.md` em um plano de implementação com tasks TDD.

@@ -1,0 +1,10 @@
+# Arquitetura
+
+<architecture>
+- **Stack:** React + Vite
+- **Estilo:** componentes
+</architecture>
+
+## Princípio
+
+KISS — a solução mais simples que atende ao SPEC. Novas dependências exigem justificativa.

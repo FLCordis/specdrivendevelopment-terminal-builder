@@ -1,0 +1,13 @@
+# Roadmap
+
+Cada feature é uma unidade de paralelismo. Respeite `depends_on` — features sem dependência podem ser despachadas em paralelo (`superpowers:dispatching-parallel-agents`).
+
+## 001 — Catálogo
+
+- **Semente:** CRUD de produtos
+- **depends_on: (nenhuma)**
+
+## 002 — Pedidos
+
+- **Semente:** checkout
+- **depends_on: Catálogo**

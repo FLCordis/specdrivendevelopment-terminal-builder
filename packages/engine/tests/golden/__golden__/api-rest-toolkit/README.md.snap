@@ -1,0 +1,19 @@
+# Pedidos API
+
+> API de pedidos
+
+**Tipo:** API REST
+
+Projeto orientado a desenvolvimento agêntico com a metodologia **Superpowers** (subagent-driven + TDD).
+
+## Como começar
+
+1. Abra este projeto no Claude Code.
+2. Siga o `START.md` — ele garante que a Superpowers está instalada e aponta o primeiro passo.
+3. A partir daí, o agente lê `docs/superpowers/specs/` e conduz o desenvolvimento.
+
+## Estrutura
+
+- `CLAUDE.md` — constituição do projeto (regras para o agente).
+- `docs/superpowers/specs/` — SPEC, contexto de domínio e roadmap.
+- `.claude/` — permissões + hooks de segurança (safety harness).

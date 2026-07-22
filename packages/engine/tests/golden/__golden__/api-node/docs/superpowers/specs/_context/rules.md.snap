@@ -1,0 +1,14 @@
+# Regras de código
+
+<code_rules>
+- **Testes:** TDD. Alvo de cobertura: 90%.
+- **CI:** obrigatório (pipeline verde antes de merge).
+- Unidades pequenas e focadas; uma responsabilidade por arquivo.
+- DRY, YAGNI. Commits atômicos e frequentes.
+- Sem código sem spec correspondente.
+</code_rules>
+
+<pr_review_rules>
+- Nenhum PR mergeia com issue Crítico/Alto aberto.
+- Toda feature passa por `superpowers:requesting-code-review` antes de concluir.
+</pr_review_rules>

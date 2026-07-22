@@ -1,0 +1,16 @@
+---
+name: rest-endpoint-tdd
+description: Use ao adicionar ou alterar um endpoint HTTP nesta API — impõe contrato-primeiro e teste-primeiro.
+---
+# REST Endpoint TDD
+
+Ao adicionar/alterar um endpoint, nesta ordem:
+
+1. **Contrato primeiro:** defina method + path, shape do request (body/params/query), shape da resposta e os status codes (sucesso e erros). Escreva isso como comentário no topo do teste.
+2. **Teste que falha antes:** escreva o teste de integração (request real → resposta esperada) e rode-o vendo falhar, ANTES de qualquer implementação.
+3. **Valide na borda:** rejeite input inválido com 400 antes de tocar em regra de negócio.
+4. **Mínimo pra passar:** implemente só o necessário. Sem lógica não coberta por teste.
+5. **Erros:** siga a skill `http-error-taxonomy` (corpo consistente, sem vazar interno).
+6. **Idempotência:** GET/PUT/DELETE devem ser idempotentes de fato — teste isso.
+
+Nunca exponha um endpoint sem teste de integração correspondente.

@@ -1,14 +1,6 @@
 {
-  "version": 2,
-  "buildCommand": "echo 'no build needed'",
-  "outputDirectory": "apps/frontend",
-  "functions": {
-    "api/*.js": {
-      "includeFiles": "apps/backend/lib/**"
-    }
-  },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/$1" }
-  ]
+  "buildCommand": "npm run build --workspace apps/web",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "npm install",
+  "framework": "nextjs"
 }
