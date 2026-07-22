@@ -45,6 +45,11 @@ export const ProjectStateSchema = z.object({
     })
     .default({}),
   features: z.array(FeatureSchema).default([]),
+  toolkit: z
+    .object({
+      disabled: z.array(z.string()).default([]),
+    })
+    .default({}),
 });
 
 export type ProjectState = z.infer<typeof ProjectStateSchema>;

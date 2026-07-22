@@ -51,4 +51,11 @@ describe("ProjectStateSchema", () => {
     });
     expect(parsed.domain.archetype).toBe("api-rest");
   });
+
+  it("toolkit.disabled default é [] e aceita ids", () => {
+    const empty = ProjectStateSchema.parse({});
+    expect(empty.toolkit).toEqual({ disabled: [] });
+    const withDisabled = ProjectStateSchema.parse({ toolkit: { disabled: ["x"] } });
+    expect(withDisabled.toolkit.disabled).toEqual(["x"]);
+  });
 });
