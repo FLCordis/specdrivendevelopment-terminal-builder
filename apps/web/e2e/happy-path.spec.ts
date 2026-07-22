@@ -37,3 +37,25 @@ test("arquétipo → seções → features → preview ao vivo", async ({ page }
   await expect(page.getByText("próximo passo")).toBeVisible();
   await expect(page.getByText('"comece a primeira feature"')).toBeVisible();
 });
+
+test("toolkit: api-rest gera o kit e o opt-out remove a peça", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Novo projeto" }).click();
+  await expect(page).toHaveURL(/\/project\//);
+
+  await page.getByLabel("Arquétipo do projeto").selectOption("api-rest");
+  await page.getByLabel("Nome do projeto").fill("Pedidos E2E");
+
+  // o kit aparece na prévia ao vivo
+  await page.getByRole("button", { name: "Prévia", exact: true }).click();
+  await expect(page.getByRole("button", { name: "SKILL.md" }).first()).toBeVisible();
+  await page.getByRole("button", { name: "new-endpoint.md" }).click();
+  await expect(page.locator("pre")).toContainText("$ARGUMENTS");
+  await page.getByRole("button", { name: "fechar ✕" }).click();
+
+  // desmarcar o command na aba Toolkit remove o arquivo
+  await page.getByRole("button", { name: /^Toolkit/ }).click();
+  await page.getByLabel("/new-endpoint").uncheck();
+  await page.getByRole("button", { name: "Prévia", exact: true }).click();
+  await expect(page.getByRole("button", { name: "new-endpoint.md" })).toHaveCount(0);
+});
