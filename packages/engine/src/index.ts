@@ -10,3 +10,5 @@ export type {
   Issue,
   ValidationResult,
 } from "./types";
+export { selectToolkit, toolkitFor, TOOLKIT } from "./toolkit";
+export type { ToolkitItem, ToolkitItemMeta, ToolkitKind, HookFragment } from "./toolkit";
