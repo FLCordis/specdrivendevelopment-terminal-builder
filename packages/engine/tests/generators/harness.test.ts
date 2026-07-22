@@ -62,4 +62,24 @@ describe("generateHarness", () => {
     )!;
     expect(hook.content).not.toContain("git");
   });
+
+  it("funde hook fragments extras no settings.json", () => {
+    const files = generateHarness(make(true), [
+      { matcher: "Bash", command: "node .claude/hooks/guard-secrets.mjs" },
+    ]);
+    const settings = JSON.parse(
+      files.find((f) => f.path === ".claude/settings.json")!.content,
+    );
+    const commands = settings.hooks.PreToolUse.flatMap((e: { hooks: { command: string }[] }) =>
+      e.hooks.map((h) => h.command),
+    );
+    expect(commands).toContain("node .claude/hooks/guard-destructive.mjs");
+    expect(commands).toContain("node .claude/hooks/guard-secrets.mjs");
+  });
+
+  it("sem fragmentos, o settings é idêntico ao base", () => {
+    const a = generateHarness(make(true)).find((f) => f.path === ".claude/settings.json")!.content;
+    const b = generateHarness(make(true), []).find((f) => f.path === ".claude/settings.json")!.content;
+    expect(a).toBe(b);
+  });
 });

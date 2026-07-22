@@ -1,7 +1,11 @@
 import type { ProjectState } from "../state/schema";
 import type { GeneratedFile } from "../types";
+import type { HookFragment } from "../toolkit";
 
-export function generateHarness(state: ProjectState): GeneratedFile[] {
+export function generateHarness(
+  state: ProjectState,
+  hookFragments: HookFragment[] = [],
+): GeneratedFile[] {
   const deny = ["Bash(rm -rf:*)"];
   if (state.meta.useGit) {
     deny.push(
@@ -11,21 +15,22 @@ export function generateHarness(state: ProjectState): GeneratedFile[] {
     );
   }
 
-  const settings = {
-    permissions: { deny },
-    hooks: {
-      PreToolUse: [
-        {
-          matcher: "Bash",
-          hooks: [
-            {
-              type: "command",
-              command: "node .claude/hooks/guard-destructive.mjs",
-            },
-          ],
-        },
+  const preToolUse = [
+    {
+      matcher: "Bash",
+      hooks: [
+        { type: "command", command: "node .claude/hooks/guard-destructive.mjs" },
       ],
     },
+    ...hookFragments.map((f) => ({
+      matcher: f.matcher,
+      hooks: [{ type: "command", command: f.command }],
+    })),
+  ];
+
+  const settings = {
+    permissions: { deny },
+    hooks: { PreToolUse: preToolUse },
   };
 
   const gitPatterns = state.meta.useGit
