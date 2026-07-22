@@ -10,6 +10,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - run: rm -rf package-lock.json node_modules
       - run: npm install
       - name: Engine — testes
         run: npm test --workspace packages/engine
