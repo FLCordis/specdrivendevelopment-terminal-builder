@@ -1,0 +1,10 @@
+---
+name: http-error-taxonomy
+description: Use ao retornar erros de um endpoint HTTP — mantém status codes e corpos de erro consistentes e seguros.
+---
+# HTTP Error Taxonomy
+
+- **Status:** 400 input inválido · 401 não autenticado · 403 sem permissão · 404 não existe · 409 conflito · 422 semântica inválida · 429 rate limit · 5xx só falha inesperada do servidor.
+- **Corpo consistente** (estilo problem+json): `{ type, title, status, detail }`, o MESMO formato em todos os endpoints.
+- **Nunca vaze** stack trace, query SQL, path interno ou mensagem de exceção crua ao cliente. Logue o detalhe no servidor; devolva mensagem genérica + id de correlação.
+- 4xx deve dizer ao cliente **como corrigir**; 5xx não carrega detalhe de implementação.

@@ -56,4 +56,16 @@ export const FIXTURES = {
     security: { threatModel: "n/a", gates: [] },
     features: [],
   }),
+  "api-rest-toolkit": ProjectStateSchema.parse({
+    meta: { name: "Pedidos API", description: "API de pedidos", specDate: "2026-07-14" },
+    domain: {
+      archetype: "api-rest",
+      projectType: "API REST",
+      useCases: ["criar pedido"],
+    },
+    arch: { stack: "Node + TypeScript", style: "hexagonal" },
+    quality: { testStrategy: "TDD", coverageTarget: 90, ci: true },
+    security: { threatModel: "OWASP API", gates: ["sec-review"] },
+    features: [{ name: "Pedidos", specSeed: "checkout" }],
+  }),
 } as const;
