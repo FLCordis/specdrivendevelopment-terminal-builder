@@ -16,6 +16,11 @@ Loja API é um projeto do tipo **API REST**. backend de e-commerce
 
 - frontend
 
+## Restrições (não-funcionais)
+
+- p95 < 200ms
+- stateless (escala horizontal)
+
 <architecture>
 Stack: Node + TypeScript. Estilo: hexagonal.
 Ver `_context/architecture.md` para justificativa e detalhes.
@@ -25,6 +30,7 @@ Ver `_context/architecture.md` para justificativa e detalhes.
 - Todos os casos de uso acima cobertos por teste.
 - Estratégia de testes: TDD (alvo de cobertura: 90%).
 - Gates de segurança aprovados (ver `_context/security.md`).
+- **Definition of done:** checkout completo com 90% de cobertura e sec-review aprovado
 </acceptance_criteria>
 
 ## Próximo passo

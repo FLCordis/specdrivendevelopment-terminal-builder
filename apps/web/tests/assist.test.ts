@@ -6,7 +6,7 @@ describe("buildPrompt", () => {
   it("inclui o campo e o contexto", () => {
     const p = buildPrompt({
       field: "domain.useCases",
-      context: { meta: { name: "Loja", description: "e-commerce", specDate: "", useGit: true } },
+      context: { meta: { name: "Loja", description: "e-commerce", specDate: "", useGit: true, definitionOfDone: "" } },
     });
     expect(p).toContain("domain.useCases");
     expect(p).toContain("Loja");

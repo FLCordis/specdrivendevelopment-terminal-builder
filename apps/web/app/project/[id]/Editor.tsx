@@ -7,19 +7,27 @@ import { useLivePreview } from "@/hooks/useLivePreview";
 import { ProjectForm } from "@/components/ProjectForm";
 import { FilePreview } from "@/components/FilePreview";
 import { SectionNav } from "@/components/SectionNav";
-import { SECTIONS, sectionStatus } from "@/lib/sections";
+import { HandoffMeter } from "@/components/HandoffMeter";
+import { HandoffReview } from "@/components/HandoffReview";
+import { PreviewDrawer } from "@/components/PreviewDrawer";
+import {
+  SECTIONS, sectionStatus, handoffPending, handoffReadiness,
+} from "@/lib/sections";
 import { downloadZip } from "@/lib/generate";
 
 export function Editor({ id }: { id: string }) {
   const { state, update, loading } = useProject(id);
   const [sectionId, setSectionId] = useState("inicio");
+  const [showPreview, setShowPreview] = useState(false);
   const { files, validation, error } = useLivePreview(state);
 
   if (loading || !state) return <p className="out__empty">Carregando…</p>;
 
   const pending = validation ? sectionStatus(state, validation) : {};
+  const pendItems = validation ? handoffPending(state, validation) : [];
+  const pct = validation ? handoffReadiness(state, validation).pct : 0;
   const section = SECTIONS.find((s) => s.id === sectionId);
-  const totalPending = Object.values(pending).reduce((a, b) => a + b, 0);
+  const totalPending = pendItems.length;
 
   function replaceState(next: ProjectState) {
     // aplica o estado inteiro campo a campo, reusando o autosave do useProject
@@ -28,6 +36,10 @@ export function Editor({ id }: { id: string }) {
     update("arch", next.arch);
     update("quality", next.quality);
     update("security", next.security);
+  }
+
+  function download() {
+    downloadZip(state!, `${state!.meta.name || "projeto"}.zip`);
   }
 
   return (
@@ -40,42 +52,59 @@ export function Editor({ id }: { id: string }) {
         </span>
         <span className="cmdbar__sp" />
         <span className="eyebrow">
-          {totalPending > 0
-            ? `${totalPending} ${totalPending === 1 ? "pendência" : "pendências"}`
-            : "spec completa"}
+          {totalPending > 0 ? `${pct}% · ${totalPending} pendente${totalPending === 1 ? "" : "s"}` : "spec completa ✓"}
         </span>
-        <Link href="/settings" className="cmdbar__link">⚙</Link>
         <button
           type="button"
-          className="btn btn--primary"
-          onClick={() => downloadZip(state, `${state.meta.name || "projeto"}.zip`)}
+          className={`btn${showPreview ? " is-on" : ""}`}
+          aria-pressed={showPreview}
+          onClick={() => setShowPreview((v) => !v)}
         >
+          {showPreview ? "Prévia ✕" : "Prévia"}
+        </button>
+        <Link href="/settings" className="cmdbar__link">⚙</Link>
+        <button type="button" className="btn btn--primary" onClick={download}>
           Baixar ZIP
         </button>
       </header>
 
-      <main className="editor">
+      <main className="editor editor--focused">
         <aside className="zone zone--rail">
+          <HandoffMeter pct={pct} pending={pendItems} onJump={setSectionId} />
           <SectionNav
             sections={SECTIONS} activeId={sectionId} pending={pending} onSelect={setSectionId}
           />
         </aside>
 
         <section className="zone zone--form">
-          <div className="section-head">
-            <p className="eyebrow">seção</p>
-            <h2>{section?.label}</h2>
-          </div>
-          <ProjectForm
-            sectionId={sectionId} state={state} onUpdate={update} onReplaceState={replaceState}
-          />
-        </section>
+          <div className="form-wrap">
+            <div className="section-head">
+              <p className="eyebrow">seção</p>
+              <h2>{section?.label}</h2>
+              {section?.coach ? <p className="section-head__coach">{section.coach}</p> : null}
+            </div>
 
-        <section className="zone zone--out">
-          {error ? <p className="out__err">{error}</p> : null}
-          <FilePreview files={files} />
+            {sectionId === "revisar" ? (
+              <HandoffReview
+                state={state}
+                pending={pendItems}
+                pct={pct}
+                onJump={setSectionId}
+                onDownload={download}
+              />
+            ) : (
+              <ProjectForm
+                sectionId={sectionId} state={state} onUpdate={update} onReplaceState={replaceState}
+              />
+            )}
+          </div>
         </section>
       </main>
+
+      <PreviewDrawer open={showPreview} onClose={() => setShowPreview(false)}>
+        {error ? <p className="out__err">{error}</p> : null}
+        <FilePreview files={files} />
+      </PreviewDrawer>
     </div>
   );
 }

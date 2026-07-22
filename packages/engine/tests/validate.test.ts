@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { validate } from "../src/validate";
 
 const full = {
-  meta: { name: "Loja", description: "e-commerce", specDate: "2026-07-14" },
+  meta: { name: "Loja", description: "e-commerce", specDate: "2026-07-14", definitionOfDone: "checkout coberto por testes" },
   domain: { projectType: "API REST" },
   arch: { stack: "Node", style: "hexagonal" },
   quality: { testStrategy: "TDD" },

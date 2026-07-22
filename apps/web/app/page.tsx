@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { listProjects, createProject, removeProject } from "@/lib/projects";
 import type { Project } from "@/lib/db";
+import TermStream from "@/components/TermStream";
 
 export default function Home() {
   const router = useRouter();
@@ -66,22 +67,7 @@ export default function Home() {
               <i />
               <span>~/loja-api · gerado pelo SDD Terminal</span>
             </div>
-            <div className="termcard__body">
-              <span className="c"># o que sai no .zip</span>
-              {"\n"}
-              <span className="k">CLAUDE.md</span>{"          "}
-              <span className="c">constituição — manda usar Superpowers</span>
-              {"\n"}
-              <span className="k">docs/superpowers/</span>{"  "}
-              <span className="c">SPEC + contexto + roadmap</span>
-              {"\n"}
-              <span className="k">.claude/hooks/</span>{"     "}
-              <span className="c">guard-destructive (bloqueia rm -rf, push)</span>
-              {"\n\n"}
-              <span className="p">▸</span> abra no Claude Code:{" "}
-              <span className="k">&quot;comece a primeira feature&quot;</span>
-              <span className="cursor" />
-            </div>
+            <TermStream />
           </div>
         </section>
 

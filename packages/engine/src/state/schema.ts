@@ -13,6 +13,7 @@ export const ProjectStateSchema = z.object({
       description: z.string().default(""),
       specDate: z.string().default(""),
       useGit: z.boolean().default(true),
+      definitionOfDone: z.string().default(""),
     })
     .default({}),
   domain: z
@@ -21,6 +22,7 @@ export const ProjectStateSchema = z.object({
       archetype: z.string().default("generic"),
       useCases: z.array(z.string()).default([]),
       nonGoals: z.array(z.string()).default([]),
+      constraints: z.array(z.string()).default([]),
     })
     .default({}),
   arch: z

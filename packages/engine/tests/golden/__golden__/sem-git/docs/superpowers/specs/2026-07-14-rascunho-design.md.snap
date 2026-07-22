@@ -15,6 +15,10 @@ Rascunho é um projeto do tipo **script**. protótipo
 
 - [NEEDS CLARIFICATION: não-objetivos]
 
+## Restrições (não-funcionais)
+
+- [NEEDS CLARIFICATION: restrições]
+
 <architecture>
 Stack: Node. Estilo: simples.
 Ver `_context/architecture.md` para justificativa e detalhes.
@@ -24,6 +28,7 @@ Ver `_context/architecture.md` para justificativa e detalhes.
 - Todos os casos de uso acima cobertos por teste.
 - Estratégia de testes: manual (alvo de cobertura: 0%).
 - Gates de segurança aprovados (ver `_context/security.md`).
+- **Definition of done:** [NEEDS CLARIFICATION: definition of done]
 </acceptance_criteria>
 
 ## Próximo passo

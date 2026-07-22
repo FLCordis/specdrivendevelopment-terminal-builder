@@ -63,6 +63,13 @@ export function ProjectForm({
           value={state.meta.name}
           onChange={(v) => onUpdate("meta.name", v)}
         />
+
+        <Field
+          label="Descrição (1 linha: o que é / pra quem)"
+          value={state.meta.description}
+          onChange={(v) => onUpdate("meta.description", v)}
+          hint={hint("meta.description")} assist={assistFor("meta.description")}
+        />
       </div>
     );
   }
@@ -70,11 +77,6 @@ export function ProjectForm({
   if (sectionId === "produto") {
     return (
       <div>
-        <Field
-          label="Descrição" value={state.meta.description}
-          onChange={(v) => onUpdate("meta.description", v)}
-          hint={hint("meta.description")} assist={assistFor("meta.description")}
-        />
         <Field
           label="Tipo de projeto" value={state.domain.projectType}
           onChange={(v) => onUpdate("domain.projectType", v)}
@@ -105,6 +107,13 @@ export function ProjectForm({
           label="Estilo arquitetural" value={state.arch.style}
           onChange={(v) => onUpdate("arch.style", v)}
           hint={hint("arch.style")} assist={assistFor("arch.style")}
+        />
+        <TextAreaField
+          label="Restrições não-funcionais (uma por linha)"
+          value={lines(state.domain.constraints)}
+          onChange={(v) => onUpdate("domain.constraints", toArray(v))}
+          hint="ex.: p95 < 200ms, roda offline, zero dependências externas"
+          assist={assistFor("domain.constraints")}
         />
       </div>
     );
@@ -138,6 +147,13 @@ export function ProjectForm({
           />
           <span> Usa CI</span>
         </label>
+        <Field
+          label="Definition of done (como sabemos que ficou pronto)"
+          value={state.meta.definitionOfDone}
+          onChange={(v) => onUpdate("meta.definitionOfDone", v)}
+          hint="ex.: checkout completo com 90% de cobertura e sec-review aprovado"
+          assist={assistFor("meta.definitionOfDone")}
+        />
       </div>
     );
   }

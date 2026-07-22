@@ -28,6 +28,10 @@ ${bullets(state.domain.useCases, "casos de uso")}
 
 ${bullets(state.domain.nonGoals, "não-objetivos")}
 
+## Restrições (não-funcionais)
+
+${bullets(state.domain.constraints, "restrições")}
+
 <architecture>
 Stack: ${stack}. Estilo: ${style}.
 Ver \`_context/architecture.md\` para justificativa e detalhes.
@@ -37,6 +41,7 @@ Ver \`_context/architecture.md\` para justificativa e detalhes.
 - Todos os casos de uso acima cobertos por teste.
 - Estratégia de testes: ${orClarify(state.quality.testStrategy, "estratégia de testes")} (alvo de cobertura: ${state.quality.coverageTarget}%).
 - Gates de segurança aprovados (ver \`_context/security.md\`).
+- **Definition of done:** ${orClarify(state.meta.definitionOfDone, "definition of done")}
 </acceptance_criteria>
 
 ## Próximo passo

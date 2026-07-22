@@ -16,6 +16,10 @@ Faxina é um projeto do tipo **CLI**. limpador de arquivos
 
 - GUI
 
+## Restrições (não-funcionais)
+
+- nunca apaga sem confirmação
+
 <architecture>
 Stack: Python. Estilo: camadas.
 Ver `_context/architecture.md` para justificativa e detalhes.
@@ -25,6 +29,7 @@ Ver `_context/architecture.md` para justificativa e detalhes.
 - Todos os casos de uso acima cobertos por teste.
 - Estratégia de testes: TDD (alvo de cobertura: 80%).
 - Gates de segurança aprovados (ver `_context/security.md`).
+- **Definition of done:** remove duplicados sem perda de dados, dry-run por padrão
 </acceptance_criteria>
 
 ## Próximo passo

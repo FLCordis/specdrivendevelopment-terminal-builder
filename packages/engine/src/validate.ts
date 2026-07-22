@@ -9,6 +9,7 @@ export const CLARIFY_FIELDS: { field: string; label: string }[] = [
   { field: "arch.style", label: "estilo arquitetural" },
   { field: "quality.testStrategy", label: "estratégia de testes" },
   { field: "security.threatModel", label: "threat model" },
+  { field: "meta.definitionOfDone", label: "definition of done" },
 ];
 
 function readPath(state: ProjectState, path: string): string {

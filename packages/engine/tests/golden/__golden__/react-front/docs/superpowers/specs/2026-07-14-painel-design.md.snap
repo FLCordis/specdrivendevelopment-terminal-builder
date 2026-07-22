@@ -15,6 +15,10 @@ Painel é um projeto do tipo **SPA**. dashboard
 
 - mobile nativo
 
+## Restrições (não-funcionais)
+
+- [NEEDS CLARIFICATION: restrições]
+
 <architecture>
 Stack: React + Vite. Estilo: componentes.
 Ver `_context/architecture.md` para justificativa e detalhes.
@@ -24,6 +28,7 @@ Ver `_context/architecture.md` para justificativa e detalhes.
 - Todos os casos de uso acima cobertos por teste.
 - Estratégia de testes: TDD + testes de componente (alvo de cobertura: 75%).
 - Gates de segurança aprovados (ver `_context/security.md`).
+- **Definition of done:** [NEEDS CLARIFICATION: definition of done]
 </acceptance_criteria>
 
 ## Próximo passo

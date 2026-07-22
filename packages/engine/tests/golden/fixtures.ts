@@ -2,11 +2,17 @@ import { ProjectStateSchema } from "../../src/state/schema";
 
 export const FIXTURES = {
   "api-node": ProjectStateSchema.parse({
-    meta: { name: "Loja API", description: "backend de e-commerce", specDate: "2026-07-14" },
+    meta: {
+      name: "Loja API",
+      description: "backend de e-commerce",
+      specDate: "2026-07-14",
+      definitionOfDone: "checkout completo com 90% de cobertura e sec-review aprovado",
+    },
     domain: {
       projectType: "API REST",
       useCases: ["listar produtos", "criar pedido"],
       nonGoals: ["frontend"],
+      constraints: ["p95 < 200ms", "stateless (escala horizontal)"],
     },
     arch: { stack: "Node + TypeScript", style: "hexagonal" },
     quality: { testStrategy: "TDD", coverageTarget: 90, ci: true },
@@ -17,8 +23,18 @@ export const FIXTURES = {
     ],
   }),
   "python-cli": ProjectStateSchema.parse({
-    meta: { name: "Faxina", description: "limpador de arquivos", specDate: "2026-07-14" },
-    domain: { projectType: "CLI", useCases: ["escanear", "remover duplicados"], nonGoals: ["GUI"] },
+    meta: {
+      name: "Faxina",
+      description: "limpador de arquivos",
+      specDate: "2026-07-14",
+      definitionOfDone: "remove duplicados sem perda de dados, dry-run por padrão",
+    },
+    domain: {
+      projectType: "CLI",
+      useCases: ["escanear", "remover duplicados"],
+      nonGoals: ["GUI"],
+      constraints: ["nunca apaga sem confirmação"],
+    },
     arch: { stack: "Python", style: "camadas" },
     quality: { testStrategy: "TDD", coverageTarget: 80, ci: true },
     security: { threatModel: "path traversal", gates: ["sec-review"] },
