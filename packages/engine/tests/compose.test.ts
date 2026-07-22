@@ -48,4 +48,40 @@ describe("generate", () => {
     const pkg = generate(semFeatures);
     expect(pkg.warnings.some((w) => w.code === "no-features")).toBe(true);
   });
+
+  it("api-rest inclui o kit curado e o hook no settings", () => {
+    const s = ProjectStateSchema.parse({
+      meta: { name: "Loja" },
+      domain: { archetype: "api-rest", projectType: "API REST" },
+    });
+    const pkg = generate(s);
+    const paths = pkg.files.map((f) => f.path);
+    expect(paths).toContain(".claude/skills/rest-endpoint-tdd/SKILL.md");
+    expect(paths).toContain(".claude/agents/api-security-reviewer.md");
+    expect(paths).toContain(".claude/commands/new-endpoint.md");
+    expect(paths).toContain(".claude/hooks/guard-secrets.mjs");
+    const settings = JSON.parse(pkg.files.find((f) => f.path === ".claude/settings.json")!.content);
+    const cmds = settings.hooks.PreToolUse.flatMap((e: { hooks: { command: string }[] }) =>
+      e.hooks.map((h) => h.command),
+    );
+    expect(cmds).toContain("node .claude/hooks/guard-secrets.mjs");
+  });
+
+  it("generic não emite nenhum arquivo de toolkit", () => {
+    const s = ProjectStateSchema.parse({ domain: { archetype: "generic" } });
+    const paths = generate(s).files.map((f) => f.path);
+    expect(paths.some((p) => p.startsWith(".claude/skills/"))).toBe(false);
+    expect(paths.some((p) => p.startsWith(".claude/agents/"))).toBe(false);
+    expect(paths.some((p) => p.startsWith(".claude/commands/"))).toBe(false);
+  });
+
+  it("desmarcar uma peça a remove da árvore", () => {
+    const s = ProjectStateSchema.parse({
+      domain: { archetype: "api-rest" },
+      toolkit: { disabled: ["new-endpoint"] },
+    });
+    const paths = generate(s).files.map((f) => f.path);
+    expect(paths).not.toContain(".claude/commands/new-endpoint.md");
+    expect(paths).toContain(".claude/skills/rest-endpoint-tdd/SKILL.md");
+  });
 });
