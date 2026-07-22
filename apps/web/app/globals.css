@@ -337,3 +337,13 @@ a:hover { color: var(--g-hi); }
 .review__next { border-top: 1px solid var(--line); padding-top: 20px; }
 .review__steps { margin: 10px 0 18px; padding-left: 20px; color: var(--gdim); line-height: 1.7; }
 .review__warn { margin: 12px 0 0; font-size: 12px; color: var(--gdim); }
+
+/* ---------- toolkit picker ---------- */
+.toolkit { max-width: 640px; display: flex; flex-direction: column; gap: 18px; }
+.toolkit__group { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; }
+.toolkit__group legend { padding: 0 6px; color: var(--g2); font-size: 12px; letter-spacing: 0.05em; }
+.toolkit__item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 4px; cursor: pointer; }
+.toolkit__item input { accent-color: var(--g); margin-top: 3px; }
+.toolkit__text { display: flex; flex-direction: column; gap: 2px; }
+.toolkit__text b { color: var(--ink); font-family: var(--display); font-weight: 500; }
+.toolkit__text small { color: var(--gdim); font-size: 12px; }

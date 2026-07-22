@@ -46,6 +46,12 @@ export const SECTIONS: Section[] = [
     coach: "Cada feature é uma unidade de paralelismo. As dependências (depends_on) definem o que roda em paralelo.",
   },
   {
+    id: "toolkit",
+    label: "Toolkit",
+    fields: [],
+    coach: "Kit curado de skills/agents/hooks/commands do arquétipo. Desmarque o que não quiser — a Superpowers cresce o resto sob demanda.",
+  },
+  {
     id: "revisar",
     label: "Revisar & Baixar",
     fields: [],

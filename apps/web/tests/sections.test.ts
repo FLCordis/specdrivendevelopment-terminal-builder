@@ -5,9 +5,9 @@ import {
 } from "../lib/sections";
 
 describe("SECTIONS", () => {
-  it("tem as 7 seções na ordem (incluindo Revisar & Baixar)", () => {
+  it("tem as 8 seções na ordem (incluindo Toolkit e Revisar & Baixar)", () => {
     expect(SECTIONS.map((s) => s.id)).toEqual([
-      "inicio", "produto", "arquitetura", "qualidade", "seguranca", "features", "revisar",
+      "inicio", "produto", "arquitetura", "qualidade", "seguranca", "features", "toolkit", "revisar",
     ]);
   });
 });
@@ -22,6 +22,7 @@ describe("sectionStatus", () => {
     expect(status.qualidade).toBe(2);     // quality.testStrategy + meta.definitionOfDone
     expect(status.seguranca).toBe(1);     // security.threatModel
     expect(status.features).toBe(1);      // lista vazia
+    expect(status.toolkit).toBe(0);
     expect(status.revisar).toBe(0);
   });
 

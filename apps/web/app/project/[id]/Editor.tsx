@@ -9,6 +9,7 @@ import { FilePreview } from "@/components/FilePreview";
 import { SectionNav } from "@/components/SectionNav";
 import { HandoffMeter } from "@/components/HandoffMeter";
 import { HandoffReview } from "@/components/HandoffReview";
+import { ToolkitPicker } from "@/components/ToolkitPicker";
 import { PreviewDrawer } from "@/components/PreviewDrawer";
 import {
   SECTIONS, sectionStatus, handoffPending, handoffReadiness,
@@ -91,6 +92,12 @@ export function Editor({ id }: { id: string }) {
                 pct={pct}
                 onJump={setSectionId}
                 onDownload={download}
+              />
+            ) : sectionId === "toolkit" ? (
+              <ToolkitPicker
+                archetype={state.domain.archetype}
+                disabled={state.toolkit.disabled}
+                onChange={(d) => update("toolkit.disabled", d)}
               />
             ) : (
               <ProjectForm
