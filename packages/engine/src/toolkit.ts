@@ -1,5 +1,6 @@
 import type { ProjectState } from "./state/schema";
 import type { GeneratedFile } from "./types";
+import { API_REST_TOOLKIT } from "./toolkit/api-rest";
 
 export type ToolkitKind = "skill" | "agent" | "command" | "hook";
 
@@ -22,7 +23,9 @@ export interface ToolkitItem {
 export type ToolkitItemMeta = Omit<ToolkitItem, "files" | "hook">;
 
 /** catálogo por id de arquétipo (string = domain.archetype); ausente ⇒ [] */
-export const TOOLKIT: Record<string, ToolkitItem[]> = {};
+export const TOOLKIT: Record<string, ToolkitItem[]> = {
+  "api-rest": API_REST_TOOLKIT,
+};
 
 export function filterActive(items: ToolkitItem[], disabled: string[]): ToolkitItem[] {
   return items.filter((i) => !disabled.includes(i.id));

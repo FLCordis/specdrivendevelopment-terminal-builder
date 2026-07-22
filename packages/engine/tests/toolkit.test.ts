@@ -24,3 +24,35 @@ describe("selectToolkit / toolkitFor", () => {
     expect(toolkitFor("inexistente")).toEqual([]);
   });
 });
+
+describe("catálogo api-rest", () => {
+  const state = ProjectStateSchema.parse({ domain: { archetype: "api-rest" } });
+
+  it("expõe 5 peças e respeita o orçamento", () => {
+    const metas = toolkitFor("api-rest");
+    expect(metas).toHaveLength(5);
+    const count = (k: string) => metas.filter((m) => m.kind === k).length;
+    expect(count("skill")).toBeLessThanOrEqual(2);
+    expect(count("agent")).toBeLessThanOrEqual(1);
+    expect(count("hook")).toBeLessThanOrEqual(1);
+    expect(count("command")).toBeLessThanOrEqual(2);
+  });
+
+  it("desmarcar um id o remove da seleção", () => {
+    const off = ProjectStateSchema.parse({
+      domain: { archetype: "api-rest" },
+      toolkit: { disabled: ["guard-secrets"] },
+    });
+    const ids = selectToolkit(off).map((i) => i.id);
+    expect(ids).not.toContain("guard-secrets");
+    expect(ids).toContain("rest-endpoint-tdd");
+  });
+
+  it("cada peça emite ao menos um arquivo em .claude/", () => {
+    for (const item of selectToolkit(state)) {
+      const files = item.files(state);
+      expect(files.length).toBeGreaterThan(0);
+      for (const f of files) expect(f.path.startsWith(".claude/")).toBe(true);
+    }
+  });
+});
