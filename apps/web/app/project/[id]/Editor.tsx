@@ -48,7 +48,7 @@ export function Editor({ id }: { id: string }) {
       <header className="cmdbar">
         <Link href="/" className="btn btn--ghost">← projetos</Link>
         <span className="cmdbar__prompt">
-          sdd ▸ <b>{state.meta.name || "sem-nome"}</b>
+          forge ▸ <b>{state.meta.name || "sem-nome"}</b>
           <span className="cursor" aria-hidden="true" />
         </span>
         <span className="cmdbar__sp" />

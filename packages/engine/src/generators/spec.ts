@@ -13,7 +13,7 @@ export function generateSpec(state: ProjectState): GeneratedFile[] {
 
   const content = `# Design — ${name}
 
-**Status:** Aprovado (gerado pelo SDD Terminal — tratar como brainstorming concluído)
+**Status:** Aprovado (gerado pelo Cordis Forge — tratar como brainstorming concluído)
 **Data:** ${date}
 
 <project_scope>
